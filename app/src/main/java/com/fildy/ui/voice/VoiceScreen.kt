@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fildy.R
 import com.fildy.ui.components.ForestScenery
 import com.fildy.ui.components.VoiceOrb
+import com.fildy.ui.components.VoiceWaveform
 import com.fildy.ui.theme.FildyMotion
 import com.fildy.ui.theme.FildyTheme
 import com.fildy.ui.theme.OnGradientVariant
@@ -177,6 +178,16 @@ fun VoiceContent(
                 }
             }
 
+            // Voice bars while the microphone is capturing.
+            AnimatedVisibility(
+                visible = uiState.phase == VoicePhase.Recording,
+                enter = fadeIn(fade),
+                exit = fadeOut(fade),
+                modifier = Modifier.padding(top = TranscriptTop, start = 24.dp),
+            ) {
+                VoiceWaveform(levels = uiState.audioLevels)
+            }
+
             // For now, just echoing what the user said, or what went wrong.
             AnimatedContent(
                 targetState = uiState.transcript to uiState.errorMessage,
@@ -234,7 +245,14 @@ private fun VoiceContentIdlePreview() {
 @Composable
 private fun VoiceContentRecordingPreview() {
     FildyTheme {
-        VoiceContent(VoiceUiState(placeName = "La Tranquera", phase = VoicePhase.Recording), {}, {}, {}, {})
+        VoiceContent(
+            VoiceUiState(
+                placeName = "La Tranquera",
+                phase = VoicePhase.Recording,
+                audioLevels = listOf(0.2f, 0.33f, 0.6f, 0.86f, 0.66f, 0.4f, 0.73f, 1f, 0.8f, 0.46f, 0.33f, 0.6f),
+            ),
+            {}, {}, {}, {},
+        )
     }
 }
 

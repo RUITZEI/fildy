@@ -8,9 +8,11 @@ import com.fildy.data.speech.SpeechProviderException
 import com.fildy.data.speech.SpeechToText
 import com.fildy.data.speech.TextToSpeech
 import com.fildy.data.speech.Transcription
+import com.fildy.ui.components.WAVEFORM_BAR_COUNT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -60,6 +62,35 @@ class VoiceViewModelTest {
     }
 
     @Test
+    fun whileRecording_audioLevelsFollowTheMicrophone() = runTest(dispatcher) {
+        recorder.levels = ArrayDeque(listOf(0.1f, 0.5f, 0.9f))
+        val vm = viewModel()
+        vm.startRecording()
+        advanceTimeBy(250) // 3 samples at 70 ms
+
+        assertEquals(listOf(0.1f, 0.5f, 0.9f), vm.uiState.value.audioLevels)
+
+        vm.stopRecording()
+        assertEquals(emptyList<Float>(), vm.uiState.value.audioLevels)
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun audioLevels_keepOnlyTheLatestBars() = runTest(dispatcher) {
+        recorder.levels = ArrayDeque(List(30) { it / 30f })
+        val vm = viewModel()
+        vm.startRecording()
+        advanceTimeBy(30 * 70L + 10)
+
+        val levels = vm.uiState.value.audioLevels
+        assertEquals(WAVEFORM_BAR_COUNT, levels.size)
+        assertEquals(29 / 30f, levels.last())
+
+        vm.stopRecording()
+        advanceUntilIdle()
+    }
+
+    @Test
     fun tooShortRecording_showsError() {
         recorder.nextRecording = null
         val vm = viewModel()
@@ -103,6 +134,8 @@ class VoiceViewModelTest {
         override fun start() = Unit
         override fun stop() = nextRecording
         override fun cancel() = Unit
+        var levels = ArrayDeque<Float>()
+        override fun level() = levels.removeFirstOrNull() ?: 0f
     }
 
     private class FakeSpeechToText : SpeechToText {

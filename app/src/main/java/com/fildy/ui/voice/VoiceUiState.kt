@@ -11,6 +11,8 @@ data class VoiceUiState(
     val transcript: String? = null,
     /** Message to show when something went wrong. */
     @StringRes val errorMessage: Int? = null,
+    /** Recent microphone loudness (0–1), oldest first, while recording. Drives the waveform. */
+    val audioLevels: List<Float> = emptyList(),
 ) {
     /** True once the user has started talking: the sphere moves to the top. */
     val isCompact: Boolean

@@ -8,6 +8,7 @@ import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
+import kotlin.math.log10
 
 /** Records microphone audio to a file. Requires the RECORD_AUDIO permission. */
 interface AudioRecorder {
@@ -19,6 +20,12 @@ interface AudioRecorder {
 
     /** Stops and discards the current recording, if any. */
     fun cancel()
+
+    /**
+     * Loudness of the microphone since the previous call, from 0 (silence) to 1 (very loud).
+     * Returns 0 when not recording. Poll it regularly (e.g. every ~70 ms) to drive a waveform.
+     */
+    fun level(): Float
 }
 
 data class Recording(val file: File, val durationMs: Long)
@@ -95,7 +102,21 @@ class MediaAudioRecorder @Inject constructor(
         output = null
     }
 
+    override fun level(): Float {
+        val amplitude = try {
+            recorder?.maxAmplitude ?: return 0f
+        } catch (e: IllegalStateException) {
+            return 0f
+        }
+        if (amplitude <= 0) return 0f
+        // Map to decibels so quiet speech still moves the bars: -50 dB → 0, 0 dB → 1.
+        val decibels = 20 * log10(amplitude / MAX_AMPLITUDE)
+        return ((decibels - MIN_DECIBELS) / -MIN_DECIBELS).coerceIn(0f, 1f)
+    }
+
     private companion object {
         const val TAG = "Fildy.AudioRecorder"
+        const val MAX_AMPLITUDE = 32_767f
+        const val MIN_DECIBELS = -50f
     }
 }

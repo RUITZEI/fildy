@@ -10,7 +10,11 @@ import com.fildy.data.speech.SpeechToText
 import com.fildy.data.speech.TextToSpeech
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import com.fildy.ui.components.WAVEFORM_BAR_COUNT
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,6 +36,8 @@ class VoiceViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(VoiceUiState(placeName = "La Tranquera"))
     val uiState: StateFlow<VoiceUiState> = _uiState.asStateFlow()
 
+    private var levelPolling: Job? = null
+
     /** Call only once the RECORD_AUDIO permission is granted. */
     fun startRecording() {
         if (_uiState.value.phase != VoicePhase.Idle) {
@@ -40,7 +46,10 @@ class VoiceViewModel @Inject constructor(
         }
         try {
             recorder.start()
-            setPhase(VoicePhase.Recording) { it.copy(transcript = null, errorMessage = null) }
+            setPhase(VoicePhase.Recording) {
+                it.copy(transcript = null, errorMessage = null, audioLevels = emptyList())
+            }
+            startLevelPolling()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start recording", e)
             fail(R.string.voice_error_generic)
@@ -49,6 +58,7 @@ class VoiceViewModel @Inject constructor(
 
     fun stopRecording() {
         if (_uiState.value.phase != VoicePhase.Recording) return
+        stopLevelPolling()
         val recording = recorder.stop()
         if (recording == null) {
             fail(R.string.voice_error_too_short)
@@ -94,8 +104,27 @@ class VoiceViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        stopLevelPolling()
         recorder.cancel()
         Log.d(TAG, "Cleared")
+    }
+
+    /** Samples the microphone loudness while recording to animate the waveform. */
+    private fun startLevelPolling() {
+        levelPolling?.cancel()
+        levelPolling = viewModelScope.launch {
+            while (isActive) {
+                delay(LEVEL_POLL_INTERVAL_MS)
+                val level = recorder.level()
+                _uiState.update { it.copy(audioLevels = (it.audioLevels + level).takeLast(WAVEFORM_BAR_COUNT)) }
+            }
+        }
+    }
+
+    private fun stopLevelPolling() {
+        levelPolling?.cancel()
+        levelPolling = null
+        _uiState.update { it.copy(audioLevels = emptyList()) }
     }
 
     private fun setPhase(phase: VoicePhase, extra: (VoiceUiState) -> VoiceUiState = { it }) {
@@ -108,5 +137,6 @@ class VoiceViewModel @Inject constructor(
     private companion object {
         const val TAG = "Fildy.Voice"
         const val LANGUAGE = "es"
+        const val LEVEL_POLL_INTERVAL_MS = 70L
     }
 }
