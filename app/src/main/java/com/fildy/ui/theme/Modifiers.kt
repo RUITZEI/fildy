@@ -34,7 +34,10 @@ fun Modifier.forestBackground(): Modifier = drawBehind {
     )
 }
 
-/** "Glass" surface for content on top of the gradient: white 14% fill + white 18% border. */
-fun Modifier.glass(shape: Shape): Modifier = this
+/**
+ * "Glass" surface for content on top of the gradient: white 14% fill + a white border
+ * (18% for data bubbles, 22% for buttons).
+ */
+fun Modifier.glass(shape: Shape, borderAlpha: Float = 0.18f): Modifier = this
     .background(Color.White.copy(alpha = 0.14f), shape)
-    .border(1.dp, Color.White.copy(alpha = 0.18f), shape)
+    .border(1.dp, Color.White.copy(alpha = borderAlpha), shape)

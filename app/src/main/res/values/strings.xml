@@ -13,4 +13,15 @@
     <string name="weather_wind">Viento</string>
     <string name="weather_percent">%1$d%%</string>
     <string name="weather_wind_unit">km/h</string>
+
+    <!-- Voice -->
+    <string name="voice_tap_to_talk">Tocá y hablá</string>
+    <string name="voice_tap_to_finish">Tocá para terminar</string>
+    <string name="voice_prompt_title">Te escucho…</string>
+    <string name="voice_prompt_hint">Contame qué pasó o preguntá algo.\nPor ejemplo: “¿Cuánto llovió este mes?”</string>
+    <string name="voice_listening">Escuchando</string>
+    <string name="voice_start_description">Empezar a hablar</string>
+    <string name="voice_stop_description">Terminar de hablar</string>
+    <string name="voice_keyboard_description">Escribir en vez de hablar</string>
+    <string name="voice_close_description">Cerrar</string>
 </resources>

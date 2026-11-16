@@ -64,3 +64,21 @@ val SunGlow = Color(0xFFFFDC78)
 val SunHighlight = Color(0xFFFFF1B8)
 val SunMid = Color(0xFFF2C14E)
 val SunEdge = Color(0xFFE0A62B)
+
+// Home landscape (hills, trees, fence)
+val HillFront = Color(0xFF17785E)
+val HillMiddle = GradientLowerMid
+val HillBack = Bosque
+val TreeTrunk = Color(0xFF6B4A2B)
+val TreeCrown = Menta
+val TreeCrownHighlight = Color(0xFF9BE0B4)
+val TreeCrownSmall = Color(0xFF4DB38B)
+val Fence = Brote
+
+// Voice sphere
+val OrbCore = Color(0xFF9BE0B4)
+val OrbMid = Menta
+val OrbEdge = GradientTop
+val OrbBlobLight = Color(0xFFE9FFD9)
+val OrbBlobDark = Pino
+val OrbBlobAccent = Brote
