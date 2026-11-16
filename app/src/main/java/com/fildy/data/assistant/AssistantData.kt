@@ -3,6 +3,7 @@ package com.fildy.data.assistant
 import com.fildy.data.model.CattleCategory
 import com.fildy.data.model.HerdAdjustment
 import com.fildy.data.model.RainfallRecord
+import com.fildy.data.model.RainfallUpdate
 import com.fildy.data.model.StockChange
 import java.time.LocalDate
 
@@ -21,6 +22,9 @@ sealed interface AssistantData {
         val totalMillimeters: Double,
         val rainyDays: List<RainfallRecord>,
     ) : AssistantData
+
+    /** Rain recorded for a day; [update] keeps the replaced record, if any, for undo. */
+    data class RainfallSaved(val update: RainfallUpdate) : AssistantData
 
     /**
      * Animals in one paddock right now; [headCounts] has every category (0 if none). [category] is

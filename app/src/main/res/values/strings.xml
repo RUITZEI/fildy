@@ -100,6 +100,13 @@
         <item quantity="one">toro</item>
         <item quantity="other">toros</item>
     </plurals>
+    <!-- Rain receipt, e.g. "LLUVIA · REGISTRO" (shown uppercase) -->
+    <string name="answer_card_rain_saved">Lluvia · Registro</string>
+    <!-- e.g. "18 mm el dom 15 nov" (millimeters, day) -->
+    <string name="answer_card_rain_saved_title">%1$s mm el %2$s</string>
+    <!-- When the day already had rain, e.g. "Reemplaza los 12 mm anteriores" -->
+    <string name="answer_card_rain_saved_replaced">Reemplaza los %s mm anteriores</string>
+    <string name="answer_card_rain_saved_new">Ese día no tenía lluvia registrada</string>
     <!-- Herd adjustment receipt, e.g. "HACIENDA · AJUSTE" (shown uppercase) -->
     <string name="answer_card_herd_adjust">Hacienda · Ajuste</string>
     <!-- e.g. "Se agregaron 20 vacas al Lote 1" (count with category, paddock) -->

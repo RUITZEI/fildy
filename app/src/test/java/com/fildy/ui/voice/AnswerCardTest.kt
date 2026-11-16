@@ -4,6 +4,7 @@ import com.fildy.data.assistant.AssistantData
 import com.fildy.data.model.CattleCategory
 import com.fildy.data.model.HerdAdjustment
 import com.fildy.data.model.RainfallRecord
+import com.fildy.data.model.RainfallUpdate
 import com.fildy.data.model.StockChange
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -123,6 +124,22 @@ class AnswerCardTest {
                 savedAt = Instant.parse("2026-11-16T22:50:00Z"),
             ),
             card,
+        )
+    }
+
+    @Test
+    fun rainfallSaved_becomesAReceipt() {
+        val date = LocalDate.of(2026, 11, 15)
+        val previous = record(date, 12.0)
+        val saved = previous.copy(millimeters = 18.0, recordedAt = Instant.parse("2026-11-16T22:48:00Z"))
+
+        assertEquals(
+            AnswerCard.RainfallSaved(date, 18.0, previousMillimeters = 12.0, savedAt = Instant.parse("2026-11-16T22:48:00Z")),
+            AssistantData.RainfallSaved(RainfallUpdate(saved, previous)).toAnswerCard(),
+        )
+        assertEquals(
+            null,
+            (AssistantData.RainfallSaved(RainfallUpdate(saved, null)).toAnswerCard() as AnswerCard.RainfallSaved).previousMillimeters,
         )
     }
 }

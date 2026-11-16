@@ -20,6 +20,14 @@ sealed interface AnswerCard {
         val dailyMillimeters: List<Double>,
     ) : AnswerCard
 
+    /** Receipt for rain recorded on [date]; [previousMillimeters] is what it replaced, if anything. */
+    data class RainfallSaved(
+        val date: LocalDate,
+        val millimeters: Double,
+        val previousMillimeters: Double?,
+        val savedAt: Instant,
+    ) : AnswerCard
+
     /** Animals in a paddock: the [total] and the categories it has animals of, in category order. */
     data class PaddockHerd(
         val paddockName: String,
@@ -78,6 +86,12 @@ fun AssistantData.toAnswerCard(): AnswerCard = when (this) {
                 .toList(),
         )
     }
+    is AssistantData.RainfallSaved -> AnswerCard.RainfallSaved(
+        date = update.record.date,
+        millimeters = update.record.millimeters,
+        previousMillimeters = update.previous?.millimeters,
+        savedAt = update.record.recordedAt,
+    )
     is AssistantData.PaddockHerd -> when (val asked = category) {
         // "¿Cuántos animales hay…?": the total and every category.
         null -> AnswerCard.PaddockHerd(

@@ -101,6 +101,13 @@ internal class PropertiesBuilder {
         }
     }
 
+    fun putNumber(name: String, description: String) {
+        properties[name] = buildJsonObject {
+            put("type", "number")
+            put("description", description)
+        }
+    }
+
     fun putInteger(name: String, description: String) {
         properties[name] = buildJsonObject {
             put("type", "integer")

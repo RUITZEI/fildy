@@ -93,7 +93,19 @@ class FakeRainfallRepository : RainfallRepository {
     override suspend fun getRainfall(date: LocalDate) = records.value.firstOrNull { it.date == date }
     override suspend fun getRainfallBetween(from: LocalDate, to: LocalDate) =
         records.value.filter { it.date in from..to }.sortedBy { it.date }
-    override suspend fun setRainfall(date: LocalDate, millimeters: Double): RainfallUpdate = TODO()
+    /** One record per day, like the real repository: replaces the day's record if it has one. */
+    override suspend fun setRainfall(date: LocalDate, millimeters: Double): RainfallUpdate {
+        val previous = records.value.firstOrNull { it.date == date }
+        val record = RainfallRecord(
+            id = previous?.id ?: (records.value.maxOfOrNull { it.id } ?: 0) + 1,
+            farmId = 1,
+            date = date,
+            millimeters = millimeters,
+            recordedAt = Instant.parse("2026-11-16T22:48:00Z"),
+        )
+        records.value = records.value.filterNot { it.date == date } + record
+        return RainfallUpdate(record, previous)
+    }
     override suspend fun undo(update: RainfallUpdate) = TODO()
     override suspend fun deleteRainfall(id: Long) = TODO()
 }

@@ -59,6 +59,7 @@ fun AnswerCardView(card: AnswerCard, modifier: Modifier = Modifier) {
     when (card) {
         is AnswerCard.RainDay -> RainDayCard(card, modifier)
         is AnswerCard.RainPeriod -> RainPeriodCard(card, modifier)
+        is AnswerCard.RainfallSaved -> RainfallSavedCard(card, modifier)
         is AnswerCard.PaddockHerd -> PaddockHerdCard(card, modifier)
         is AnswerCard.PaddockCategory -> PaddockCategoryCard(card, modifier)
         is AnswerCard.HerdAdjusted -> HerdAdjustedCard(card, modifier)
@@ -138,6 +139,26 @@ private fun PaddockHerdCard(card: AnswerCard.PaddockHerd, modifier: Modifier = M
     }
 }
 
+/** Receipt for recorded rain: "18 mm el dom 15 nov" and what it replaced, if anything. */
+@Composable
+private fun RainfallSavedCard(card: AnswerCard.RainfallSaved, modifier: Modifier = Modifier) {
+    val locale = rememberAppLocale()
+    ReceiptCard(
+        icon = R.drawable.ic_droplet,
+        overline = stringResource(R.string.answer_card_rain_saved),
+        title = stringResource(
+            R.string.answer_card_rain_saved_title,
+            card.millimeters.formatted(locale),
+            card.date.shortLabel(locale, withWeekday = true),
+        ),
+        detail = card.previousMillimeters
+            ?.let { stringResource(R.string.answer_card_rain_saved_replaced, it.formatted(locale)) }
+            ?: stringResource(R.string.answer_card_rain_saved_new),
+        savedAt = card.savedAt,
+        modifier = modifier,
+    )
+}
+
 /** Receipt for a herd move: "30 vacas del Lote 1 al Lote 2" and the counts after it. */
 @Composable
 private fun CattleMovedCard(card: AnswerCard.CattleMoved, modifier: Modifier = Modifier) {
@@ -193,9 +214,10 @@ private fun ReceiptCard(
     detail: String,
     savedAt: Instant,
     modifier: Modifier = Modifier,
+    @DrawableRes icon: Int = R.drawable.ic_grid,
 ) {
     DataCard(modifier) {
-        Overline(R.drawable.ic_grid, overline)
+        Overline(icon, overline)
         Spacer(Modifier.height(6.dp))
         Text(text = title, style = MaterialTheme.typography.titleLarge, color = Tinta)
         Text(
@@ -362,6 +384,14 @@ private fun AnswerCardsPreview() {
                     paddockName = "Lote 1",
                     total = 348,
                     counts = listOf(CattleCategory.COW to 150, CattleCategory.CALF to 148, CattleCategory.BULL to 50),
+                ),
+            )
+            AnswerCardView(
+                AnswerCard.RainfallSaved(
+                    date = today.minusDays(1),
+                    millimeters = 18.0,
+                    previousMillimeters = 12.0,
+                    savedAt = Instant.parse("2026-11-16T22:48:00Z"),
                 ),
             )
             AnswerCardView(AnswerCard.PaddockCategory("Lote 1", CattleCategory.COW, count = 150, total = 348))
