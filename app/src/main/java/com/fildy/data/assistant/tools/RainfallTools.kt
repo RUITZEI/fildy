@@ -6,13 +6,10 @@ import com.fildy.data.assistant.AssistantTool
 import com.fildy.data.assistant.ToolOutput
 import com.fildy.data.repository.RainfallRepository
 import java.time.LocalDate
-import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -100,39 +97,5 @@ class RainfallBetweenDatesTool @Inject constructor(
 
     private companion object {
         const val MAX_DAYS = 366L
-    }
-}
-
-private const val TAG = "Fildy.AssistantTools"
-
-private fun parseDate(value: String): LocalDate? = try {
-    LocalDate.parse(value)
-} catch (e: DateTimeParseException) {
-    null
-}
-
-/** A failed call: an error the model can read and react to, and no data for the app. */
-private fun error(message: String): ToolOutput =
-    ToolOutput(buildJsonObject { put("error", message) }.toString().also { Log.w(TAG, message) })
-
-/** JSON Schema for an object whose properties are all required (strict mode). */
-private fun objectSchema(properties: PropertiesBuilder.() -> Unit): JsonObject {
-    val builder = PropertiesBuilder().apply(properties)
-    return buildJsonObject {
-        put("type", "object")
-        put("properties", JsonObject(builder.properties))
-        putJsonArray("required") { builder.properties.keys.forEach { add(it) } }
-        put("additionalProperties", false)
-    }
-}
-
-private class PropertiesBuilder {
-    val properties = linkedMapOf<String, JsonObject>()
-
-    fun putDate(name: String, description: String) {
-        properties[name] = buildJsonObject {
-            put("type", "string")
-            put("description", description)
-        }
     }
 }

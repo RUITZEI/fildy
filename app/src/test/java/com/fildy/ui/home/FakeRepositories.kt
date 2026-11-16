@@ -10,6 +10,7 @@ import com.fildy.data.repository.RainfallRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import java.time.Instant
 import java.time.LocalDate
 
 /** Emits whatever overview the test puts in [overview]. Writes aren't used by the cards. */
@@ -18,7 +19,36 @@ class FakeFarmRepository : FarmRepository {
     override suspend fun getFarm() = overview.value?.farm
     override fun observeFarmOverview(): Flow<FarmOverview?> = overview
     override fun observeStockChanges(limit: Int): Flow<List<StockChange>> = emptyFlow()
-    override suspend fun moveCattle(category: CattleCategory, fromPaddockId: Long, toPaddockId: Long, headCount: Int) = TODO()
+    val moves = mutableListOf<StockChange.Move>()
+
+    /** Moves animals inside [overview], like the real repository (which also validates stock). */
+    override suspend fun moveCattle(
+        category: CattleCategory,
+        fromPaddockId: Long,
+        toPaddockId: Long,
+        headCount: Int,
+    ): StockChange.Move {
+        val current = checkNotNull(overview.value)
+        require(current.paddocks.first { it.paddock.id == fromPaddockId }.headCount(category) >= headCount)
+        overview.value = current.copy(
+            paddocks = current.paddocks.map { stock ->
+                val delta = when (stock.paddock.id) {
+                    fromPaddockId -> -headCount
+                    toPaddockId -> headCount
+                    else -> 0
+                }
+                stock.copy(headCounts = stock.headCounts + (category to stock.headCount(category) + delta))
+            },
+        )
+        return StockChange.Move(
+            id = moves.size + 1L,
+            category = category,
+            recordedAt = Instant.parse("2026-11-16T22:48:00Z"),
+            fromPaddockId = fromPaddockId,
+            toPaddockId = toPaddockId,
+            headCount = headCount,
+        ).also { moves += it }
+    }
     override suspend fun correctHeadCount(paddockId: Long, category: CattleCategory, newHeadCount: Int) = TODO()
     override suspend fun undo(change: StockChange) = TODO()
 }

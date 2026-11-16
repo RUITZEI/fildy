@@ -1,6 +1,7 @@
 package com.fildy.ui.voice
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -26,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fildy.R
+import com.fildy.data.model.CattleCategory
 import com.fildy.ui.components.DataCard
 import com.fildy.ui.components.RainChart
 import com.fildy.ui.components.formatted
@@ -33,9 +37,12 @@ import com.fildy.ui.components.rememberAppLocale
 import com.fildy.ui.theme.FildyTheme
 import com.fildy.ui.theme.Laguna
 import com.fildy.ui.theme.Musgo
+import com.fildy.ui.theme.Outline
 import com.fildy.ui.theme.Tinta
 import com.fildy.ui.theme.forestBackground
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -45,8 +52,82 @@ fun AnswerCardView(card: AnswerCard, modifier: Modifier = Modifier) {
     when (card) {
         is AnswerCard.RainDay -> RainDayCard(card, modifier)
         is AnswerCard.RainPeriod -> RainPeriodCard(card, modifier)
+        is AnswerCard.CattleMoved -> CattleMovedCard(card, modifier)
     }
 }
+
+/**
+ * Receipt for a herd move, like the design's "Comprobante": overline, what was done, the counts
+ * after the move, a dashed cut line and when it was saved.
+ */
+@Composable
+private fun CattleMovedCard(card: AnswerCard.CattleMoved, modifier: Modifier = Modifier) {
+    DataCard(modifier) {
+        Overline(R.drawable.ic_grid, stringResource(R.string.answer_card_herd_move))
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = stringResource(
+                R.string.answer_card_move,
+                pluralStringResource(card.category.countPluralRes, card.headCount, card.headCount),
+                card.fromPaddockName,
+                card.toPaddockName,
+            ),
+            style = MaterialTheme.typography.titleLarge,
+            color = Tinta,
+        )
+        Text(
+            text = stringResource(
+                R.string.answer_card_move_counts,
+                card.remainingInSource,
+                card.fromPaddockName,
+                card.totalInDestination,
+                card.toPaddockName,
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Musgo,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+        DashedDivider(Modifier.padding(top = 12.dp, bottom = 8.dp))
+        Text(
+            text = stringResource(R.string.answer_card_saved_at, card.savedAt.timeLabel()),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = Musgo,
+        )
+    }
+}
+
+/** The receipt's 2 dp dashed "cut" line. */
+@Composable
+private fun DashedDivider(modifier: Modifier = Modifier) {
+    Canvas(
+        modifier
+            .fillMaxWidth()
+            .height(2.dp),
+    ) {
+        drawLine(
+            color = Outline,
+            start = Offset(0f, size.height / 2),
+            end = Offset(size.width, size.height / 2),
+            strokeWidth = size.height,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx())),
+        )
+    }
+}
+
+/** "19:48" in the device's time zone. */
+private fun Instant.timeLabel(): String =
+    DateTimeFormatter.ofPattern("HH:mm").format(atZone(ZoneId.systemDefault()))
+
+/** "30 vacas", "1 toro"… */
+private val CattleCategory.countPluralRes: Int
+    get() = when (this) {
+        CattleCategory.COW -> R.plurals.cattle_count_cow
+        CattleCategory.HEIFER -> R.plurals.cattle_count_heifer
+        CattleCategory.CALF -> R.plurals.cattle_count_calf
+        CattleCategory.STEER -> R.plurals.cattle_count_steer
+        CattleCategory.BULL -> R.plurals.cattle_count_bull
+    }
 
 /** "LLUVIA · DOM 15 NOV" + the millimeters, or that nothing was recorded. */
 @Composable
@@ -147,6 +228,17 @@ private fun AnswerCardsPreview() {
                     totalMillimeters = 37.0,
                     rainyDayCount = 2,
                     dailyMillimeters = List(16) { i -> when (i) { 6 -> 19.0; 14 -> 18.0; else -> 0.0 } },
+                ),
+            )
+            AnswerCardView(
+                AnswerCard.CattleMoved(
+                    category = CattleCategory.COW,
+                    headCount = 30,
+                    fromPaddockName = "Lote 1",
+                    toPaddockName = "Lote 2",
+                    remainingInSource = 120,
+                    totalInDestination = 170,
+                    savedAt = Instant.parse("2026-11-16T22:48:00Z"),
                 ),
             )
         }

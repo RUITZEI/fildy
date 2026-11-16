@@ -6,6 +6,7 @@ import com.fildy.data.assistant.Assistant
 import com.fildy.data.assistant.AssistantTool
 import com.fildy.data.assistant.openai.OpenAiAssistant
 import com.fildy.data.assistant.openai.OpenAiConfig
+import com.fildy.data.assistant.tools.MoveCattleTool
 import com.fildy.data.assistant.tools.RainfallBetweenDatesTool
 import com.fildy.data.assistant.tools.RainfallOnDateTool
 import com.fildy.domain.voice.VoiceAssistantSettings
@@ -36,6 +37,10 @@ abstract class AssistantModule {
     @Binds
     @IntoSet
     abstract fun bindRainfallBetweenDatesTool(tool: RainfallBetweenDatesTool): AssistantTool
+
+    @Binds
+    @IntoSet
+    abstract fun bindMoveCattleTool(tool: MoveCattleTool): AssistantTool
 
     companion object {
         @Provides

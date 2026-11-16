@@ -67,5 +67,33 @@
         <item quantity="one">%d día con lluvia</item>
         <item quantity="other">%d días con lluvia</item>
     </plurals>
+    <!-- Herd move receipt, e.g. "HACIENDA · MOVIMIENTO" (shown uppercase) -->
+    <string name="answer_card_herd_move">Hacienda · Movimiento</string>
+    <!-- e.g. "30 vacas del Lote 1 al Lote 2" (count with category, from, to) -->
+    <string name="answer_card_move">%1$s del %2$s al %3$s</string>
+    <!-- e.g. "Ahora hay 120 en Lote 1 y 170 en Lote 2" -->
+    <string name="answer_card_move_counts">Ahora hay %1$d en %2$s y %3$d en %4$s</string>
+    <!-- e.g. "Guardado hoy · 19:48" -->
+    <string name="answer_card_saved_at">Guardado hoy · %s</string>
+    <plurals name="cattle_count_cow">
+        <item quantity="one">%d vaca</item>
+        <item quantity="other">%d vacas</item>
+    </plurals>
+    <plurals name="cattle_count_heifer">
+        <item quantity="one">%d vaquillona</item>
+        <item quantity="other">%d vaquillonas</item>
+    </plurals>
+    <plurals name="cattle_count_calf">
+        <item quantity="one">%d ternero</item>
+        <item quantity="other">%d terneros</item>
+    </plurals>
+    <plurals name="cattle_count_steer">
+        <item quantity="one">%d novillo</item>
+        <item quantity="other">%d novillos</item>
+    </plurals>
+    <plurals name="cattle_count_bull">
+        <item quantity="one">%d toro</item>
+        <item quantity="other">%d toros</item>
+    </plurals>
     <string name="rain_card_chart_description">Gráfico de lluvia diaria de los últimos %d días</string>
 </resources>

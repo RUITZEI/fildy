@@ -1,6 +1,7 @@
 package com.fildy.data.assistant
 
 import com.fildy.data.model.RainfallRecord
+import com.fildy.data.model.StockChange
 import java.time.LocalDate
 
 /**
@@ -17,6 +18,18 @@ sealed interface AssistantData {
         val to: LocalDate,
         val totalMillimeters: Double,
         val rainyDays: List<RainfallRecord>,
+    ) : AssistantData
+
+    /**
+     * Animals moved between paddocks. [move] is the saved change (it can be undone with
+     * `FarmRepository.undo`); the counts are for the moved category after the move.
+     */
+    data class CattleMoved(
+        val move: StockChange.Move,
+        val fromPaddockName: String,
+        val toPaddockName: String,
+        val remainingInSource: Int,
+        val totalInDestination: Int,
     ) : AssistantData
 }
 

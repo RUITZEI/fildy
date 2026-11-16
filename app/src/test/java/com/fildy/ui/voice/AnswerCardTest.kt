@@ -1,7 +1,9 @@
 package com.fildy.ui.voice
 
 import com.fildy.data.assistant.AssistantData
+import com.fildy.data.model.CattleCategory
 import com.fildy.data.model.RainfallRecord
+import com.fildy.data.model.StockChange
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.Instant
@@ -36,4 +38,30 @@ class AnswerCardTest {
 
     private fun record(date: LocalDate, mm: Double) =
         RainfallRecord(id = 0, farmId = 1, date = date, millimeters = mm, recordedAt = Instant.EPOCH)
+
+    @Test
+    fun cattleMoved_becomesAReceipt() {
+        val move = StockChange.Move(
+            id = 7,
+            category = CattleCategory.COW,
+            recordedAt = Instant.parse("2026-11-16T22:48:00Z"),
+            fromPaddockId = 1,
+            toPaddockId = 2,
+            headCount = 30,
+        )
+        val card = AssistantData.CattleMoved(move, "Lote 1", "Lote 2", 120, 170).toAnswerCard()
+
+        assertEquals(
+            AnswerCard.CattleMoved(
+                category = CattleCategory.COW,
+                headCount = 30,
+                fromPaddockName = "Lote 1",
+                toPaddockName = "Lote 2",
+                remainingInSource = 120,
+                totalInDestination = 170,
+                savedAt = Instant.parse("2026-11-16T22:48:00Z"),
+            ),
+            card,
+        )
+    }
 }
