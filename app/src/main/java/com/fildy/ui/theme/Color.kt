@@ -82,3 +82,9 @@ val OrbEdge = GradientTop
 val OrbBlobLight = Color(0xFFE9FFD9)
 val OrbBlobDark = Pino
 val OrbBlobAccent = Brote
+
+/** Light background behind rain icons. */
+val LagunaClaro = Color(0xFFE2F2F4)
+
+/** Card shadow: rgba(4, 40, 30, .18). */
+val CardShadow = Color(0x2E04281E)

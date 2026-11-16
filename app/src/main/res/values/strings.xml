@@ -31,4 +31,30 @@
     <string name="voice_stop_description">Terminar de hablar</string>
     <string name="voice_keyboard_description">Escribir en vez de hablar</string>
     <string name="voice_close_description">Cerrar</string>
+
+    <!-- Farm card -->
+    <string name="farm_card_title">Mi campo</string>
+    <plurals name="farm_card_paddocks">
+        <item quantity="one">%d lote</item>
+        <item quantity="other">%d lotes</item>
+    </plurals>
+    <!-- Abbreviation of "cabezas" (head of cattle), after the total -->
+    <string name="farm_card_head_unit">cab.</string>
+    <string name="cattle_cow">Vacas</string>
+    <string name="cattle_heifer">Vaquillonas</string>
+    <string name="cattle_calf">Terneros</string>
+    <string name="cattle_steer">Novillos</string>
+    <string name="cattle_bull">Toros</string>
+
+    <!-- Rain card -->
+    <string name="rain_card_title">Lluvia · %d días</string>
+    <string name="rain_unit">mm</string>
+    <string name="rain_card_none">Sin lluvias en este período</string>
+    <string name="rain_card_last_today">Última: %s mm hoy</string>
+    <string name="rain_card_last_yesterday">Última: %s mm anoche</string>
+    <plurals name="rain_card_last_days_ago">
+        <item quantity="one">Última: %1$s mm hace %2$d día</item>
+        <item quantity="other">Última: %1$s mm hace %2$d días</item>
+    </plurals>
+    <string name="rain_card_chart_description">Gráfico de lluvia diaria de los últimos %d días</string>
 </resources>
