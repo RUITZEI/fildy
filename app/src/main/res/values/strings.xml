@@ -20,6 +20,13 @@
     <string name="voice_prompt_title">Te escucho…</string>
     <string name="voice_prompt_hint">Contame qué pasó o preguntá algo.\nPor ejemplo: “¿Cuánto llovió este mes?”</string>
     <string name="voice_listening">Escuchando</string>
+    <string name="voice_processing">Procesando…</string>
+    <string name="voice_speaking">Respondiendo</string>
+    <string name="voice_wait">Un momento…</string>
+    <string name="voice_error_generic">Algo salió mal. Probá de nuevo.</string>
+    <string name="voice_error_too_short">Fue muy corto. Hablá un poco más antes de terminar.</string>
+    <string name="voice_error_nothing_heard">No escuché nada. Probá de nuevo.</string>
+    <string name="voice_error_permission">Necesito el micrófono para escucharte. También podés escribir.</string>
     <string name="voice_start_description">Empezar a hablar</string>
     <string name="voice_stop_description">Terminar de hablar</string>
     <string name="voice_keyboard_description">Escribir en vez de hablar</string>

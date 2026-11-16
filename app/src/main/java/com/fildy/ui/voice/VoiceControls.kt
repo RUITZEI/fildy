@@ -30,13 +30,17 @@ import com.fildy.ui.theme.FildyMotion
 /** Bottom controls of the voice screen: keyboard · voice button · close, with a hint below. */
 @Composable
 fun VoiceControls(
-    isRecording: Boolean,
+    phase: VoicePhase,
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
     onKeyboardClick: () -> Unit,
     onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isRecording = phase == VoicePhase.Recording
+    // While transcribing or speaking, the button can't be used.
+    val isBusy = phase == VoicePhase.Transcribing || phase == VoicePhase.Speaking
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -57,6 +61,7 @@ fun VoiceControls(
             VoiceButton(
                 state = if (isRecording) VoiceButtonState.Recording else VoiceButtonState.Idle,
                 onClick = if (isRecording) onStopRecording else onStartRecording,
+                enabled = !isBusy,
                 modifier = Modifier.sharedContainer(SharedElementKeys.VoiceButton),
             )
             GlassIconButton(
@@ -66,15 +71,19 @@ fun VoiceControls(
             )
         }
         AnimatedContent(
-            targetState = isRecording,
+            targetState = when {
+                isRecording -> R.string.voice_tap_to_finish
+                isBusy -> R.string.voice_wait
+                else -> R.string.voice_tap_to_talk
+            },
             transitionSpec = {
                 val spec = tween<Float>(FildyMotion.StandardDuration, easing = FildyMotion.Standard)
                 fadeIn(spec) togetherWith fadeOut(spec)
             },
             label = "voiceHint",
-        ) { recording ->
+        ) { hint ->
             Text(
-                text = stringResource(if (recording) R.string.voice_tap_to_finish else R.string.voice_tap_to_talk),
+                text = stringResource(hint),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.White,

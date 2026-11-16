@@ -1,9 +1,25 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+}
+
+/**
+ * Reads a secret from local.properties (local development) or, if missing there, from an
+ * environment variable with the same name (CI/CD secrets). Returns "" when it's not set.
+ */
+fun secret(name: String): String {
+    val localProperties = Properties().apply {
+        val file = rootProject.file("local.properties")
+        if (file.exists()) file.inputStream().use(::load)
+    }
+    return localProperties.getProperty(name)
+        ?: providers.environmentVariable(name).orNull
+        ?: ""
 }
 
 android {
@@ -20,6 +36,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "ELEVENLABS_API_KEY", "\"${secret("ELEVENLABS_API_KEY")}\"")
     }
 
     buildTypes {
@@ -36,6 +54,11 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+    testOptions {
+        // android.util.Log calls in production code return defaults instead of throwing.
+        unitTests.isReturnDefaultValues = true
     }
     packaging {
         resources {
@@ -74,6 +97,11 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.kotlinx.serialization.core)
+
+    // Networking (speech providers)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.kotlinx.serialization.json)
 
     // Hilt
     implementation(libs.hilt.android)

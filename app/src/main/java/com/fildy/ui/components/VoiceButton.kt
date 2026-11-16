@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
@@ -78,6 +79,7 @@ fun VoiceButton(
     state: VoiceButtonState,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val isPill = state == VoiceButtonState.Pill
     val description = when (state) {
@@ -89,12 +91,13 @@ fun VoiceButton(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .then(if (state == VoiceButtonState.Recording) Modifier else Modifier.pulsingRing())
+            .then(if (state == VoiceButtonState.Recording || !enabled) Modifier else Modifier.pulsingRing())
+            .alpha(if (enabled) 1f else 0.6f)
             .drawBehind { drawSpread(if (isPill) 6.dp else 8.dp, Color.White.copy(alpha = if (isPill) 0.15f else 0.14f)) }
             .dropShadow(CircleShape, Shadow(radius = 30.dp, color = Color.Black.copy(alpha = 0.25f), offset = DpOffset(0.dp, 10.dp)))
             .clip(CircleShape)
             .background(Blanco)
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .then(if (description != null) Modifier.semantics { contentDescription = description } else Modifier),
     ) {
         if (isPill) PillContent() else CircleContent(state)
