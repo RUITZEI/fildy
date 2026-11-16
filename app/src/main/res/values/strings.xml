@@ -21,6 +21,7 @@
     <string name="voice_prompt_hint">Contame qué pasó o preguntá algo.\nPor ejemplo: “¿Cuánto llovió este mes?”</string>
     <string name="voice_listening">Escuchando</string>
     <string name="voice_processing">Procesando…</string>
+    <string name="voice_thinking">Pensando…</string>
     <string name="voice_speaking">Respondiendo</string>
     <string name="voice_wait">Un momento…</string>
     <string name="voice_error_generic">Algo salió mal. Probá de nuevo.</string>
@@ -55,6 +56,16 @@
     <plurals name="rain_card_last_days_ago">
         <item quantity="one">Última: %1$s mm hace %2$d día</item>
         <item quantity="other">Última: %1$s mm hace %2$d días</item>
+    </plurals>
+    <!-- Answer cards (voice screen) -->
+    <!-- e.g. "LLUVIA · DOM 15 NOV" (shown uppercase) -->
+    <string name="answer_card_rain">Lluvia · %s</string>
+    <!-- A period, e.g. "1 nov – 16 nov" -->
+    <string name="answer_card_period">%1$s – %2$s</string>
+    <string name="answer_card_rain_none">Sin lluvia registrada</string>
+    <plurals name="answer_card_rainy_days">
+        <item quantity="one">%d día con lluvia</item>
+        <item quantity="other">%d días con lluvia</item>
     </plurals>
     <string name="rain_card_chart_description">Gráfico de lluvia diaria de los últimos %d días</string>
 </resources>

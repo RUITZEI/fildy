@@ -38,6 +38,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "ELEVENLABS_API_KEY", "\"${secret("ELEVENLABS_API_KEY")}\"")
+        buildConfigField("String", "OPENAI_API_KEY", "\"${secret("OPENAI_API_KEY")}\"")
+
+        // Read the assistant's answers out loud with text-to-speech. Set SPEAK_ANSWERS=false to
+        // switch it off (e.g. to save ElevenLabs credits while testing). Defaults to true.
+        val speakAnswers = secret("SPEAK_ANSWERS").ifBlank { "true" }
+        require(speakAnswers == "true" || speakAnswers == "false") {
+            "SPEAK_ANSWERS must be 'true' or 'false', was '$speakAnswers'"
+        }
+        buildConfigField("boolean", "SPEAK_ANSWERS", speakAnswers)
     }
 
     buildTypes {
@@ -102,6 +111,10 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
+
+    // OpenAI (assistant with function calling)
+    implementation(libs.openai.java)
+    implementation(libs.kotlin.reflect)
 
     // Hilt
     implementation(libs.hilt.android)

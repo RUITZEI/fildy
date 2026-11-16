@@ -28,6 +28,16 @@ class RainfallRepositoryImpl @Inject constructor(
         return rainfallDao.observeSince(from).map { list -> list.map { it.toDomain() } }
     }
 
+    override suspend fun getRainfall(date: LocalDate): RainfallRecord? {
+        val farm = farmDao.getFarm() ?: return null
+        return rainfallDao.getByDate(farm.id, date)?.toDomain()
+    }
+
+    override suspend fun getRainfallBetween(from: LocalDate, to: LocalDate): List<RainfallRecord> {
+        val farm = farmDao.getFarm() ?: return emptyList()
+        return rainfallDao.getBetween(farm.id, from, to).map { it.toDomain() }
+    }
+
     override suspend fun setRainfall(date: LocalDate, millimeters: Double): RainfallUpdate {
         require(millimeters >= 0) { "Rainfall can't be negative: $millimeters" }
         val update = transaction {

@@ -1,13 +1,16 @@
 package com.fildy.ui.voice
 
 import com.fildy.R
-import com.fildy.data.audio.AudioPlayer
+import com.fildy.data.assistant.AssistantData
 import com.fildy.data.audio.AudioRecorder
 import com.fildy.data.audio.Recording
 import com.fildy.data.speech.SpeechProviderException
-import com.fildy.data.speech.SpeechToText
-import com.fildy.data.speech.TextToSpeech
-import com.fildy.data.speech.Transcription
+import com.fildy.domain.voice.AnswerVoiceQuestionUseCase
+import com.fildy.domain.voice.FakeAssistant
+import com.fildy.domain.voice.FakePlayer
+import com.fildy.domain.voice.FakeSpeechToText
+import com.fildy.domain.voice.FakeTextToSpeech
+import com.fildy.domain.voice.VoiceAssistantSettings
 import com.fildy.ui.components.WAVEFORM_BAR_COUNT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,10 +22,12 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class VoiceViewModelTest {
@@ -30,6 +35,7 @@ class VoiceViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val recorder = FakeRecorder()
     private val speechToText = FakeSpeechToText()
+    private val assistant = FakeAssistant()
     private val textToSpeech = FakeTextToSpeech()
     private val player = FakePlayer()
 
@@ -39,26 +45,44 @@ class VoiceViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun viewModel() = VoiceViewModel(recorder, speechToText, textToSpeech, player)
+    private fun viewModel(speakAnswers: Boolean = true) = VoiceViewModel(
+        recorder,
+        AnswerVoiceQuestionUseCase(speechToText, assistant, textToSpeech, player, VoiceAssistantSettings(speakAnswers)),
+    )
 
     @Test
-    fun recordThenStop_transcribesAndReadsBack() = runTest(dispatcher) {
-        speechToText.result = Transcription("Llovieron 18 milímetros", "spa")
+    fun recordThenStop_showsTheAssistantsAnswerAndSpeaksIt() = runTest(dispatcher) {
+        speechToText.text = "¿Cuánto llovió ayer?"
+        assistant.reply = "Ayer llovieron 18 milímetros."
+        assistant.data = listOf(AssistantData.RainOnDate(LocalDate.of(2026, 11, 15), 18.0))
         val vm = viewModel()
 
         vm.startRecording()
         assertEquals(VoicePhase.Recording, vm.uiState.value.phase)
 
         vm.stopRecording()
-        assertEquals(VoicePhase.Transcribing, vm.uiState.value.phase)
         advanceUntilIdle()
 
-        assertEquals("Llovieron 18 milímetros", vm.uiState.value.transcript)
-        assertEquals("es", speechToText.lastLanguage)
-        assertEquals("Llovieron 18 milímetros", textToSpeech.lastText)
+        assertEquals("¿Cuánto llovió ayer?", assistant.lastQuestion)
+        assertEquals("Ayer llovieron 18 milímetros.", vm.uiState.value.answer)
+        assertEquals(listOf(AnswerCard.RainDay(LocalDate.of(2026, 11, 15), 18.0)), vm.uiState.value.answerCards)
+        assertEquals("Ayer llovieron 18 milímetros.", textToSpeech.lastText)
         assertEquals(1, player.plays)
         assertEquals(VoicePhase.Idle, vm.uiState.value.phase)
         assertNull(vm.uiState.value.errorMessage)
+        assertFalse(recorder.lastFile.exists()) // recording deleted
+    }
+
+    @Test
+    fun speakAnswersOff_showsTheAnswerWithoutSpeaking() = runTest(dispatcher) {
+        val vm = viewModel(speakAnswers = false)
+        vm.startRecording()
+        vm.stopRecording()
+        advanceUntilIdle()
+
+        assertEquals(assistant.reply, vm.uiState.value.answer)
+        assertEquals(0, player.plays)
+        assertEquals(VoicePhase.Idle, vm.uiState.value.phase)
     }
 
     @Test
@@ -101,20 +125,22 @@ class VoiceViewModelTest {
     }
 
     @Test
-    fun providerFailure_showsGenericError() = runTest(dispatcher) {
-        speechToText.error = SpeechProviderException("HTTP 401")
+    fun assistantFailure_showsGenericError() = runTest(dispatcher) {
+        assistant.error = SpeechProviderException("HTTP 401")
         val vm = viewModel()
         vm.startRecording()
         vm.stopRecording()
         advanceUntilIdle()
+
         assertEquals(VoicePhase.Idle, vm.uiState.value.phase)
         assertEquals(R.string.voice_error_generic, vm.uiState.value.errorMessage)
+        assertNull(vm.uiState.value.answer)
         assertEquals(0, player.plays)
     }
 
     @Test
     fun emptyTranscript_showsNothingHeard() = runTest(dispatcher) {
-        speechToText.result = Transcription("  ")
+        speechToText.text = "  "
         val vm = viewModel()
         vm.startRecording()
         vm.stopRecording()
@@ -130,37 +156,12 @@ class VoiceViewModelTest {
     }
 
     private class FakeRecorder : AudioRecorder {
-        var nextRecording: Recording? = Recording(File.createTempFile("rec", ".m4a"), 1_500)
+        val lastFile: File = File.createTempFile("rec", ".m4a")
+        var nextRecording: Recording? = Recording(lastFile, 1_500)
+        var levels = ArrayDeque<Float>()
         override fun start() = Unit
         override fun stop() = nextRecording
         override fun cancel() = Unit
-        var levels = ArrayDeque<Float>()
         override fun level() = levels.removeFirstOrNull() ?: 0f
-    }
-
-    private class FakeSpeechToText : SpeechToText {
-        var result = Transcription("hola")
-        var error: Exception? = null
-        var lastLanguage: String? = null
-        override suspend fun transcribe(audio: File, languageCode: String?): Transcription {
-            lastLanguage = languageCode
-            error?.let { throw it }
-            return result
-        }
-    }
-
-    private class FakeTextToSpeech : TextToSpeech {
-        var lastText: String? = null
-        override suspend fun synthesize(text: String): File {
-            lastText = text
-            return File.createTempFile("tts", ".mp3")
-        }
-    }
-
-    private class FakePlayer : AudioPlayer {
-        var plays = 0
-        override suspend fun play(file: File) {
-            plays++
-        }
     }
 }

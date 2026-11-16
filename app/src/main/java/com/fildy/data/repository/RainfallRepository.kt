@@ -14,6 +14,12 @@ interface RainfallRepository {
      * Sets the rain for [date]. If the day already has a record, it's replaced (e.g. a
      * correction); the returned [RainfallUpdate] keeps the previous one so it can be undone.
      */
+    /** The rain recorded on [date], or null if none was recorded. */
+    suspend fun getRainfall(date: LocalDate): RainfallRecord?
+
+    /** Rain recorded from [from] to [to] (both included), oldest first. Dry days aren't included. */
+    suspend fun getRainfallBetween(from: LocalDate, to: LocalDate): List<RainfallRecord>
+
     suspend fun setRainfall(date: LocalDate, millimeters: Double): RainfallUpdate
 
     /**

@@ -15,6 +15,7 @@ import java.time.LocalDate
 /** Emits whatever overview the test puts in [overview]. Writes aren't used by the cards. */
 class FakeFarmRepository : FarmRepository {
     val overview = MutableStateFlow<FarmOverview?>(null)
+    override suspend fun getFarm() = overview.value?.farm
     override fun observeFarmOverview(): Flow<FarmOverview?> = overview
     override fun observeStockChanges(limit: Int): Flow<List<StockChange>> = emptyFlow()
     override suspend fun moveCattle(category: CattleCategory, fromPaddockId: Long, toPaddockId: Long, headCount: Int) = TODO()
@@ -30,6 +31,9 @@ class FakeRainfallRepository : RainfallRepository {
         requestedDays = days
         return records
     }
+    override suspend fun getRainfall(date: LocalDate) = records.value.firstOrNull { it.date == date }
+    override suspend fun getRainfallBetween(from: LocalDate, to: LocalDate) =
+        records.value.filter { it.date in from..to }.sortedBy { it.date }
     override suspend fun setRainfall(date: LocalDate, millimeters: Double): RainfallUpdate = TODO()
     override suspend fun undo(update: RainfallUpdate) = TODO()
     override suspend fun deleteRainfall(id: Long) = TODO()

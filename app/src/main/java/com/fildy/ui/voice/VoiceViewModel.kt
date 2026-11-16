@@ -4,33 +4,32 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fildy.R
-import com.fildy.data.audio.AudioPlayer
 import com.fildy.data.audio.AudioRecorder
-import com.fildy.data.speech.SpeechToText
-import com.fildy.data.speech.TextToSpeech
+import com.fildy.domain.voice.AnswerVoiceQuestionUseCase
+import com.fildy.domain.voice.NothingHeardException
+import com.fildy.domain.voice.VoiceQuestionStep
+import com.fildy.ui.components.WAVEFORM_BAR_COUNT
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import com.fildy.ui.components.WAVEFORM_BAR_COUNT
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
+/**
+ * Voice screen: owns the microphone (recording + waveform) and hands the recording to
+ * [AnswerVoiceQuestionUseCase], mapping its steps to the screen's phases.
+ */
 @HiltViewModel
 class VoiceViewModel @Inject constructor(
     private val recorder: AudioRecorder,
-    private val speechToText: SpeechToText,
-    private val textToSpeech: TextToSpeech,
-    private val player: AudioPlayer,
+    private val answerVoiceQuestion: AnswerVoiceQuestionUseCase,
 ) : ViewModel() {
-
-    // Switch flag ON/OFF to enable TTS "echoing" to avoid wasting credits.
-    private val ECHO_BACK = true
 
     // TODO: Load the place name from the farm repository.
     private val _uiState = MutableStateFlow(VoiceUiState(placeName = "La Tranquera"))
@@ -47,7 +46,7 @@ class VoiceViewModel @Inject constructor(
         try {
             recorder.start()
             setPhase(VoicePhase.Recording) {
-                it.copy(transcript = null, errorMessage = null, audioLevels = emptyList())
+                it.copy(answer = null, answerCards = emptyList(), errorMessage = null, audioLevels = emptyList())
             }
             startLevelPolling()
         } catch (e: Exception) {
@@ -64,31 +63,25 @@ class VoiceViewModel @Inject constructor(
             fail(R.string.voice_error_too_short)
             return
         }
-        setPhase(VoicePhase.Transcribing)
         viewModelScope.launch {
             try {
-                val transcription = speechToText.transcribe(recording.file, languageCode = LANGUAGE)
-                if (transcription.text.isBlank()) {
-                    Log.w(TAG, "Transcription came back empty")
-                    fail(R.string.voice_error_nothing_heard)
-                    return@launch
-                }
-                _uiState.update { it.copy(transcript = transcription.text) }
-
-                // For testing: read the transcript back. Replace with the assistant's answer later.
-                if (ECHO_BACK) {
-                    setPhase(VoicePhase.Speaking)
-                    val speech = textToSpeech.synthesize(transcription.text)
-                    try {
-                        player.play(speech)
-                    } finally {
-                        speech.delete()
+                answerVoiceQuestion(recording.file).collect { step ->
+                    when (step) {
+                        VoiceQuestionStep.Transcribing -> setPhase(VoicePhase.Transcribing)
+                        is VoiceQuestionStep.Heard -> Log.d(TAG, "Question: \"${step.question}\"")
+                        VoiceQuestionStep.Thinking -> setPhase(VoicePhase.Thinking)
+                        is VoiceQuestionStep.Answered -> _uiState.update {
+                            it.copy(answer = step.text, answerCards = step.data.map { data -> data.toAnswerCard() })
+                        }
+                        VoiceQuestionStep.Speaking -> setPhase(VoicePhase.Speaking)
                     }
                 }
-
                 setPhase(VoicePhase.Idle)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: NothingHeardException) {
+                Log.w(TAG, e.message.orEmpty())
+                fail(R.string.voice_error_nothing_heard)
             } catch (e: Exception) {
                 Log.e(TAG, "Voice pipeline failed", e)
                 fail(R.string.voice_error_generic)
@@ -136,7 +129,6 @@ class VoiceViewModel @Inject constructor(
 
     private companion object {
         const val TAG = "Fildy.Voice"
-        const val LANGUAGE = "es"
         const val LEVEL_POLL_INTERVAL_MS = 70L
     }
 }

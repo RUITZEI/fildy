@@ -1,6 +1,5 @@
 package com.fildy.ui.home.rain
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -8,9 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -22,13 +18,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fildy.R
 import com.fildy.ui.components.DataCard
 import com.fildy.ui.components.DataCardHeader
+import com.fildy.ui.components.RainChart
 import com.fildy.ui.components.EnterFromBelow
 import com.fildy.ui.components.formatted
 import com.fildy.ui.components.rememberAppLocale
 import com.fildy.ui.theme.FildyTheme
 import com.fildy.ui.theme.Laguna
-import com.fildy.ui.theme.LagunaBar
-import com.fildy.ui.theme.LagunaBarEmpty
 import com.fildy.ui.theme.LagunaClaro
 import com.fildy.ui.theme.forestBackground
 import java.time.LocalDate
@@ -80,7 +75,7 @@ fun RainCard(state: RainUiState.Success, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(12.dp))
         val chartDescription = stringResource(R.string.rain_card_chart_description, state.periodDays)
         RainChart(
-            days = state.days,
+            millimeters = state.days.map { it.millimeters },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(36.dp)
@@ -88,45 +83,6 @@ fun RainCard(state: RainUiState.Success, modifier: Modifier = Modifier) {
         )
     }
 }
-
-/**
- * One bar per day, oldest on the left. Rainy days are wider and as tall as their rain relative
- * to the wettest day; dry days are thin 3 dp marks.
- */
-@Composable
-private fun RainChart(days: List<DailyRain>, modifier: Modifier = Modifier) {
-    Canvas(modifier) {
-        if (days.isEmpty()) return@Canvas
-        val gap = 1.dp.toPx()
-        val dryHeight = 3.dp.toPx()
-        val radius = CornerRadius(3.dp.toPx())
-        val maxRain = days.maxOf { it.millimeters }.takeIf { it > 0 } ?: 1.0
-        // Rainy days take 3 units of width, dry days 1, as in the design.
-        val units = days.sumOf { if (it.millimeters > 0) RAINY_WIDTH else DRY_WIDTH }
-        val unitWidth = (size.width - gap * (days.size - 1)) / units
-
-        var x = 0f
-        days.forEach { day ->
-            val rainy = day.millimeters > 0
-            val width = unitWidth * if (rainy) RAINY_WIDTH else DRY_WIDTH
-            val height = if (rainy) {
-                (size.height * (day.millimeters / maxRain)).toFloat().coerceAtLeast(dryHeight * 2)
-            } else {
-                dryHeight
-            }
-            drawRoundRect(
-                color = if (rainy) LagunaBar else LagunaBarEmpty,
-                topLeft = Offset(x, size.height - height),
-                size = Size(width, height),
-                cornerRadius = radius,
-            )
-            x += width + gap
-        }
-    }
-}
-
-private const val RAINY_WIDTH = 3
-private const val DRY_WIDTH = 1
 
 @Preview(widthDp = 360)
 @Composable

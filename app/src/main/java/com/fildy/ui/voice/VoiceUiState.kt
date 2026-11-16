@@ -7,8 +7,10 @@ data class VoiceUiState(
     /** Name of the farm shown at the top, e.g. "La Tranquera". */
     val placeName: String,
     val phase: VoicePhase = VoicePhase.Idle,
-    /** Text recognized from the last recording, if any. */
-    val transcript: String? = null,
+    /** The assistant's answer to the last question, if any. */
+    val answer: String? = null,
+    /** Cards with the data behind [answer] (e.g. rain for the asked day), in order. */
+    val answerCards: List<AnswerCard> = emptyList(),
     /** Message to show when something went wrong. */
     @StringRes val errorMessage: Int? = null,
     /** Recent microphone loudness (0–1), oldest first, while recording. Drives the waveform. */
@@ -16,7 +18,7 @@ data class VoiceUiState(
 ) {
     /** True once the user has started talking: the sphere moves to the top. */
     val isCompact: Boolean
-        get() = phase != VoicePhase.Idle || transcript != null || errorMessage != null
+        get() = phase != VoicePhase.Idle || answer != null || errorMessage != null
 }
 
 enum class VoicePhase {
@@ -29,6 +31,9 @@ enum class VoicePhase {
     /** Converting the recording to text. */
     Transcribing,
 
-    /** Reading the transcript back out loud. */
+    /** The assistant is working out the answer (may call tools). */
+    Thinking,
+
+    /** Reading the answer out loud. */
     Speaking,
 }

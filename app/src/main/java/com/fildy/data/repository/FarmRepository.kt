@@ -1,12 +1,16 @@
 package com.fildy.data.repository
 
 import com.fildy.data.model.CattleCategory
+import com.fildy.data.model.Farm
 import com.fildy.data.model.FarmOverview
 import com.fildy.data.model.StockChange
 import kotlinx.coroutines.flow.Flow
 
 /** The farm, its paddocks and its herd. */
 interface FarmRepository {
+    /** The farm, or null before the database is seeded. */
+    suspend fun getFarm(): Farm?
+
     /** The farm with every paddock and its head count per category. Updates on every change. */
     fun observeFarmOverview(): Flow<FarmOverview?>
 

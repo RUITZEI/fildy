@@ -9,6 +9,7 @@ import com.fildy.data.local.entity.toDomain
 import com.fildy.data.local.entity.toEntity
 import com.fildy.data.local.relation.toDomain
 import com.fildy.data.model.CattleCategory
+import com.fildy.data.model.Farm
 import com.fildy.data.model.FarmOverview
 import com.fildy.data.model.StockChange
 import java.time.Clock
@@ -24,6 +25,8 @@ class FarmRepositoryImpl @Inject constructor(
     private val transaction: TransactionRunner,
     private val clock: Clock,
 ) : FarmRepository {
+
+    override suspend fun getFarm(): Farm? = farmDao.getFarm()?.toDomain()
 
     override fun observeFarmOverview(): Flow<FarmOverview?> =
         farmDao.observeFarmWithPaddocks().map { it?.toDomain() }

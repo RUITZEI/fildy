@@ -17,6 +17,10 @@ interface RainfallDao {
     @Query("SELECT * FROM rainfall WHERE farmId = :farmId AND date = :date")
     suspend fun getByDate(farmId: Long, date: LocalDate): RainfallEntity?
 
+    /** Records from [from] to [to] (both included), oldest first. */
+    @Query("SELECT * FROM rainfall WHERE farmId = :farmId AND date BETWEEN :from AND :to ORDER BY date")
+    suspend fun getBetween(farmId: Long, from: LocalDate, to: LocalDate): List<RainfallEntity>
+
     @Insert
     suspend fun insert(rainfall: RainfallEntity): Long
 

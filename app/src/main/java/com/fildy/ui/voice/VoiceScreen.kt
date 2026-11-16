@@ -12,6 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +22,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,6 +90,9 @@ private val OrbSizeCompact = 64.dp
 private val PromptTop = OrbTopIdle + OrbSizeIdle + 46.dp
 private val StatusLabelTop = OrbTopCompact + OrbSizeCompact + 8.dp
 private val TranscriptTop = StatusLabelTop + 130.dp
+
+/** Bottom space kept free for the voice controls (buttons + hint). */
+private val ControlsClearance = 170.dp
 
 @Composable
 fun VoiceContent(
@@ -188,26 +194,37 @@ fun VoiceContent(
                 VoiceWaveform(levels = uiState.audioLevels)
             }
 
-            // For now, just echoing what the user said, or what went wrong.
+            // The assistant's answer with its data cards, or what went wrong. Scrolls when long,
+            // stopping above the bottom controls.
             AnimatedContent(
-                targetState = uiState.transcript to uiState.errorMessage,
+                targetState = Triple(uiState.answer, uiState.answerCards, uiState.errorMessage),
                 transitionSpec = { fadeIn(fade) togetherWith fadeOut(fade) },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = TranscriptTop, start = 24.dp, end = 24.dp),
-                label = "voiceTranscript",
-            ) { (transcript, error) ->
-                when {
-                    error != null -> Text(
-                        text = stringResource(error),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = OnGradientVariant,
-                    )
-                    transcript != null -> Text(
-                        text = transcript,
-                        style = MaterialTheme.typography.headlineMedium.copy(fontSize = 36.sp, lineHeight = 44.sp),
-                        color = Color.White,
-                    )
+                    .fillMaxSize()
+                    .padding(top = TranscriptTop, bottom = ControlsClearance),
+                label = "voiceAnswer",
+            ) { (answer, cards, error) ->
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp),
+                ) {
+                    when {
+                        error != null -> Text(
+                            text = stringResource(error),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = OnGradientVariant,
+                        )
+                        // Title L (22/30 bold), as in the design's answer screen: answers can be long.
+                        answer != null -> Text(
+                            text = answer,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.White,
+                        )
+                    }
+                    cards.forEach { AnswerCardView(it) }
                 }
             }
         }
@@ -230,6 +247,7 @@ private fun VoicePhase.statusLabel(): Int? = when (this) {
     VoicePhase.Idle -> null
     VoicePhase.Recording -> R.string.voice_listening
     VoicePhase.Transcribing -> R.string.voice_processing
+    VoicePhase.Thinking -> R.string.voice_thinking
     VoicePhase.Speaking -> R.string.voice_speaking
 }
 
@@ -258,13 +276,14 @@ private fun VoiceContentRecordingPreview() {
 
 @Preview(widthDp = 360, heightDp = 800)
 @Composable
-private fun VoiceContentTranscriptPreview() {
+private fun VoiceContentAnswerPreview() {
     FildyTheme {
         VoiceContent(
             VoiceUiState(
                 placeName = "La Tranquera",
                 phase = VoicePhase.Speaking,
-                transcript = "Llovieron 18 milímetros anoche en todo el campo",
+                answer = "Anoche llovieron 18 milímetros en todo el campo.",
+                answerCards = listOf(AnswerCard.RainDay(java.time.LocalDate.of(2026, 11, 15), 18.0)),
             ),
             {}, {}, {}, {},
         )

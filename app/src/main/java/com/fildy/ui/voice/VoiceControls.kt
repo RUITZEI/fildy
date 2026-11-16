@@ -39,7 +39,7 @@ fun VoiceControls(
 ) {
     val isRecording = phase == VoicePhase.Recording
     // While transcribing or speaking, the button can't be used.
-    val isBusy = phase == VoicePhase.Transcribing || phase == VoicePhase.Speaking
+    val isBusy = phase == VoicePhase.Transcribing || phase == VoicePhase.Thinking || phase == VoicePhase.Speaking
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
