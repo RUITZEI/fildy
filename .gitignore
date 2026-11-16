@@ -1,0 +1,91 @@
+# ---------------------------------------------------------------
+# Gradle
+# ---------------------------------------------------------------
+.gradle/
+build/
+# Keep the wrapper jar (needed to run ./gradlew on a fresh clone)
+!gradle/wrapper/gradle-wrapper.jar
+
+# Kotlin 2.x compiler/daemon data
+.kotlin/
+
+# Local SDK paths / machine-specific config
+local.properties
+
+# ---------------------------------------------------------------
+# Android build outputs & generated files
+# ---------------------------------------------------------------
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+release/
+captures/
+.externalNativeBuild/
+.cxx/
+*.hprof
+
+# Lint
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+
+# ---------------------------------------------------------------
+# Android Studio / IntelliJ
+# Shared project settings (e.g. .idea/codeStyles, runConfigurations)
+# stay versioned; user- and machine-specific files are ignored.
+# ---------------------------------------------------------------
+*.iml
+*.ipr
+*.iws
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/shelf/
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/modules/
+.idea/gradle.xml
+.idea/misc.xml
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/deploymentTargetDropDown.xml
+.idea/deploymentTargetSelector.xml
+.idea/AndroidProjectSystem.xml
+.idea/androidTestResultsUserPreferences.xml
+.idea/appInsightsSettings.xml
+.idea/studiobot.xml
+.idea/other.xml
+.idea/sonarlint/
+.idea/copilot/
+.idea/inspectionProfiles/profiles_settings.xml
+
+# ---------------------------------------------------------------
+# Signing & secrets — never commit these
+# ---------------------------------------------------------------
+*.jks
+*.keystore
+keystore.properties
+google-services.json
+secrets.properties
+
+# ---------------------------------------------------------------
+# OS / editor noise
+# ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+
+# NOTE: app/schemas/ (Room exported schemas) must stay versioned —
+# Room uses them to generate and verify migrations.
