@@ -64,4 +64,38 @@ class AnswerCardTest {
             card,
         )
     }
+
+    @Test
+    fun paddockHerd_keepsOnlyCategoriesWithAnimals_inCategoryOrder() {
+        val data = AssistantData.PaddockHerd(
+            paddockName = "Lote 1",
+            headCounts = mapOf(
+                CattleCategory.BULL to 50,
+                CattleCategory.COW to 150,
+                CattleCategory.HEIFER to 0,
+                CattleCategory.CALF to 148,
+                CattleCategory.STEER to 0,
+            ),
+        )
+
+        assertEquals(
+            AnswerCard.PaddockHerd(
+                paddockName = "Lote 1",
+                total = 348,
+                counts = listOf(CattleCategory.COW to 150, CattleCategory.CALF to 148, CattleCategory.BULL to 50),
+            ),
+            data.toAnswerCard(),
+        )
+    }
+
+    @Test
+    fun paddockHerdWithCategory_becomesAFocusedCard() {
+        val data = AssistantData.PaddockHerd(
+            paddockName = "Lote 1",
+            headCounts = mapOf(CattleCategory.COW to 150, CattleCategory.CALF to 148, CattleCategory.BULL to 50),
+            category = CattleCategory.COW,
+        )
+
+        assertEquals(AnswerCard.PaddockCategory("Lote 1", CattleCategory.COW, count = 150, total = 348), data.toAnswerCard())
+    }
 }

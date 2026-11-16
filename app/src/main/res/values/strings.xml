@@ -67,6 +67,39 @@
         <item quantity="one">%d día con lluvia</item>
         <item quantity="other">%d días con lluvia</item>
     </plurals>
+    <!-- Paddock herd card, e.g. "HACIENDA · LOTE 5" (shown uppercase) -->
+    <string name="answer_card_herd">Hacienda · %s</string>
+    <!-- Unit after a head count, e.g. "348 animales" -->
+    <plurals name="answer_card_animals_unit">
+        <item quantity="one">animal</item>
+        <item quantity="other">animales</item>
+    </plurals>
+    <!-- Under a category count, e.g. "de 348 animales en el lote" -->
+    <plurals name="answer_card_of_total">
+        <item quantity="one">de %s animal en el lote</item>
+        <item quantity="other">de %s animales en el lote</item>
+    </plurals>
+    <!-- Category nouns after a big number, e.g. "150 | vacas" -->
+    <plurals name="cattle_noun_cow">
+        <item quantity="one">vaca</item>
+        <item quantity="other">vacas</item>
+    </plurals>
+    <plurals name="cattle_noun_heifer">
+        <item quantity="one">vaquillona</item>
+        <item quantity="other">vaquillonas</item>
+    </plurals>
+    <plurals name="cattle_noun_calf">
+        <item quantity="one">ternero</item>
+        <item quantity="other">terneros</item>
+    </plurals>
+    <plurals name="cattle_noun_steer">
+        <item quantity="one">novillo</item>
+        <item quantity="other">novillos</item>
+    </plurals>
+    <plurals name="cattle_noun_bull">
+        <item quantity="one">toro</item>
+        <item quantity="other">toros</item>
+    </plurals>
     <!-- Herd move receipt, e.g. "HACIENDA · MOVIMIENTO" (shown uppercase) -->
     <string name="answer_card_herd_move">Hacienda · Movimiento</string>
     <!-- e.g. "30 vacas del Lote 1 al Lote 2" (count with category, from, to) -->

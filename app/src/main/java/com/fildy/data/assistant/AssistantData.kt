@@ -1,5 +1,6 @@
 package com.fildy.data.assistant
 
+import com.fildy.data.model.CattleCategory
 import com.fildy.data.model.RainfallRecord
 import com.fildy.data.model.StockChange
 import java.time.LocalDate
@@ -19,6 +20,18 @@ sealed interface AssistantData {
         val totalMillimeters: Double,
         val rainyDays: List<RainfallRecord>,
     ) : AssistantData
+
+    /**
+     * Animals in one paddock right now; [headCounts] has every category (0 if none). [category] is
+     * the one the user asked about, or null if they asked about all the animals.
+     */
+    data class PaddockHerd(
+        val paddockName: String,
+        val headCounts: Map<CattleCategory, Int>,
+        val category: CattleCategory? = null,
+    ) : AssistantData {
+        val total: Int get() = headCounts.values.sum()
+    }
 
     /**
      * Animals moved between paddocks. [move] is the saved change (it can be undone with

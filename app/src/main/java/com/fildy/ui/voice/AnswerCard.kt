@@ -19,6 +19,21 @@ sealed interface AnswerCard {
         val dailyMillimeters: List<Double>,
     ) : AnswerCard
 
+    /** Animals in a paddock: the [total] and the categories it has animals of, in category order. */
+    data class PaddockHerd(
+        val paddockName: String,
+        val total: Int,
+        val counts: List<Pair<CattleCategory, Int>>,
+    ) : AnswerCard
+
+    /** How many animals of one [category] a paddock has, out of its [total]. */
+    data class PaddockCategory(
+        val paddockName: String,
+        val category: CattleCategory,
+        val count: Int,
+        val total: Int,
+    ) : AnswerCard
+
     /** Receipt for animals moved between paddocks; counts are for [category] after the move. */
     data class CattleMoved(
         val category: CattleCategory,
@@ -44,6 +59,23 @@ fun AssistantData.toAnswerCard(): AnswerCard = when (this) {
                 .takeWhile { it <= to }
                 .map { byDate[it] ?: 0.0 }
                 .toList(),
+        )
+    }
+    is AssistantData.PaddockHerd -> when (val asked = category) {
+        // "¿Cuántos animales hay…?": the total and every category.
+        null -> AnswerCard.PaddockHerd(
+            paddockName = paddockName,
+            total = total,
+            counts = CattleCategory.entries.mapNotNull { category ->
+                headCounts[category]?.takeIf { it > 0 }?.let { category to it }
+            },
+        )
+        // "¿Cuántas vacas hay…?": only that category.
+        else -> AnswerCard.PaddockCategory(
+            paddockName = paddockName,
+            category = asked,
+            count = headCounts[asked] ?: 0,
+            total = total,
         )
     }
     is AssistantData.CattleMoved -> AnswerCard.CattleMoved(

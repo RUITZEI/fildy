@@ -2,6 +2,10 @@ package com.fildy.ui.voice
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -34,6 +39,8 @@ import com.fildy.ui.components.DataCard
 import com.fildy.ui.components.RainChart
 import com.fildy.ui.components.formatted
 import com.fildy.ui.components.rememberAppLocale
+import com.fildy.ui.home.farm.labelRes
+import com.fildy.ui.theme.Divider
 import com.fildy.ui.theme.FildyTheme
 import com.fildy.ui.theme.Laguna
 import com.fildy.ui.theme.Musgo
@@ -52,7 +59,81 @@ fun AnswerCardView(card: AnswerCard, modifier: Modifier = Modifier) {
     when (card) {
         is AnswerCard.RainDay -> RainDayCard(card, modifier)
         is AnswerCard.RainPeriod -> RainPeriodCard(card, modifier)
+        is AnswerCard.PaddockHerd -> PaddockHerdCard(card, modifier)
+        is AnswerCard.PaddockCategory -> PaddockCategoryCard(card, modifier)
         is AnswerCard.CattleMoved -> CattleMovedCard(card, modifier)
+    }
+}
+
+/** "HACIENDA · LOTE 1", "150 vacas" and "de 348 animales en el lote" for context. */
+@Composable
+private fun PaddockCategoryCard(card: AnswerCard.PaddockCategory, modifier: Modifier = Modifier) {
+    val locale = rememberAppLocale()
+    DataCard(modifier) {
+        Overline(R.drawable.ic_grid, stringResource(R.string.answer_card_herd, card.paddockName))
+        Spacer(Modifier.height(8.dp))
+        BigValue(
+            value = card.count.formatted(locale),
+            unit = pluralStringResource(card.category.nounPluralRes, card.count),
+            color = Tinta,
+        )
+        Text(
+            text = pluralStringResource(R.plurals.answer_card_of_total, card.total, card.total.formatted(locale)),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Musgo,
+        )
+    }
+}
+
+/** "HACIENDA · LOTE 5", the total and how many of each category, as in the design's answer card. */
+@Composable
+private fun PaddockHerdCard(card: AnswerCard.PaddockHerd, modifier: Modifier = Modifier) {
+    val locale = rememberAppLocale()
+    DataCard(modifier) {
+        Overline(R.drawable.ic_grid, stringResource(R.string.answer_card_herd, card.paddockName))
+        Spacer(Modifier.height(8.dp))
+        BigValue(
+            value = card.total.formatted(locale),
+            unit = pluralStringResource(R.plurals.answer_card_animals_unit, card.total),
+            color = Tinta,
+        )
+        card.counts.chunked(3).forEach { row ->
+            Spacer(Modifier.height(10.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
+            ) {
+                row.forEachIndexed { index, (category, count) ->
+                    if (index > 0) {
+                        Spacer(
+                            Modifier
+                                .padding(horizontal = 8.dp)
+                                .width(1.dp)
+                                .fillMaxHeight()
+                                .background(Divider),
+                        )
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = count.formatted(locale),
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, lineHeight = 26.sp),
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Tinta,
+                        )
+                        Text(
+                            text = stringResource(category.labelRes),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Musgo,
+                            maxLines = 1,
+                        )
+                    }
+                }
+                // Keep columns the same width when the last row is shorter.
+                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
     }
 }
 
@@ -118,6 +199,16 @@ private fun DashedDivider(modifier: Modifier = Modifier) {
 /** "19:48" in the device's time zone. */
 private fun Instant.timeLabel(): String =
     DateTimeFormatter.ofPattern("HH:mm").format(atZone(ZoneId.systemDefault()))
+
+/** "vaca" / "vacas"… (the noun alone, after a big number). */
+private val CattleCategory.nounPluralRes: Int
+    get() = when (this) {
+        CattleCategory.COW -> R.plurals.cattle_noun_cow
+        CattleCategory.HEIFER -> R.plurals.cattle_noun_heifer
+        CattleCategory.CALF -> R.plurals.cattle_noun_calf
+        CattleCategory.STEER -> R.plurals.cattle_noun_steer
+        CattleCategory.BULL -> R.plurals.cattle_noun_bull
+    }
 
 /** "30 vacas", "1 toro"… */
 private val CattleCategory.countPluralRes: Int
@@ -189,9 +280,9 @@ private fun Overline(@DrawableRes icon: Int, text: String) {
     }
 }
 
-/** A key number in Laguna (rain's data color), 34 sp, with its unit. */
+/** A key number, 34 sp, with its unit; Laguna (rain's data color) by default. */
 @Composable
-private fun BigValue(value: String, unit: String) {
+private fun BigValue(value: String, unit: String, color: Color = Laguna) {
     Text(
         text = buildAnnotatedString {
             withStyle(SpanStyle(fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.5).sp)) {
@@ -200,7 +291,7 @@ private fun BigValue(value: String, unit: String) {
             withStyle(SpanStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)) { append(" $unit") }
         },
         style = MaterialTheme.typography.titleLarge.copy(lineHeight = 40.sp),
-        color = Laguna,
+        color = color,
     )
 }
 
@@ -230,6 +321,14 @@ private fun AnswerCardsPreview() {
                     dailyMillimeters = List(16) { i -> when (i) { 6 -> 19.0; 14 -> 18.0; else -> 0.0 } },
                 ),
             )
+            AnswerCardView(
+                AnswerCard.PaddockHerd(
+                    paddockName = "Lote 1",
+                    total = 348,
+                    counts = listOf(CattleCategory.COW to 150, CattleCategory.CALF to 148, CattleCategory.BULL to 50),
+                ),
+            )
+            AnswerCardView(AnswerCard.PaddockCategory("Lote 1", CattleCategory.COW, count = 150, total = 348))
             AnswerCardView(
                 AnswerCard.CattleMoved(
                     category = CattleCategory.COW,

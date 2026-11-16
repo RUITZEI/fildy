@@ -2,8 +2,10 @@ package com.fildy.data.assistant.tools
 
 import android.util.Log
 import com.fildy.data.assistant.ToolOutput
+import com.fildy.data.model.PaddockStock
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.add
@@ -31,6 +33,24 @@ internal fun error(message: String, details: JsonObjectBuilder.() -> Unit = {}):
         details()
     }.toString().also { Log.w(TAG, it) },
 )
+
+/**
+ * Finds a paddock by name, forgiving case and spacing ("lote 1", "Lote 1"), or by its number
+ * alone ("1") when names are like "Lote 1".
+ */
+internal fun List<PaddockStock>.findPaddock(name: String): PaddockStock? {
+    val wanted = name.normalized()
+    return firstOrNull { it.paddock.name.normalized() == wanted }
+        ?: wanted.toIntOrNull()?.let { number -> firstOrNull { it.paddock.name.number() == number } }
+}
+
+private fun String.normalized() = trim().lowercase().replace(Regex("\\s+"), " ")
+
+private fun String.number(): Int? = Regex("\\d+").find(this)?.value?.toIntOrNull()
+
+/** Adds the list of valid paddock names to an error, so the model can correct itself. */
+internal fun JsonObjectBuilder.putPaddocks(names: List<String>) =
+    putJsonArray("paddocks") { names.forEach { add(it) } }
 
 /** JSON Schema for an object whose properties are all required (strict mode). */
 internal fun objectSchema(properties: PropertiesBuilder.() -> Unit): JsonObject {
@@ -60,6 +80,24 @@ internal class PropertiesBuilder {
             put("type", "string")
             put("description", description)
             putJsonArray("enum") { values.forEach { add(it) } }
+        }
+    }
+
+    /**
+     * An optional enum. Strict mode needs every property in "required", so "optional" means the
+     * model must send it, but may send null.
+     */
+    fun putNullableEnum(name: String, description: String, values: List<String>) {
+        properties[name] = buildJsonObject {
+            putJsonArray("type") {
+                add("string")
+                add("null")
+            }
+            put("description", description)
+            putJsonArray("enum") {
+                values.forEach { add(it) }
+                add(JsonNull)
+            }
         }
     }
 

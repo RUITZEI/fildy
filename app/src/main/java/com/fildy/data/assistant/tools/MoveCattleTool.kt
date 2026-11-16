@@ -5,18 +5,14 @@ import com.fildy.data.assistant.AssistantData
 import com.fildy.data.assistant.AssistantTool
 import com.fildy.data.assistant.ToolOutput
 import com.fildy.data.model.CattleCategory
-import com.fildy.data.model.PaddockStock
 import com.fildy.data.repository.FarmRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObjectBuilder
-import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
 
 /** Moves animals of one category from one paddock to another, checking there are enough first. */
 class MoveCattleTool @Inject constructor(
@@ -58,9 +54,9 @@ class MoveCattleTool @Inject constructor(
             ?: return error("The farm isn't loaded yet.")
         val paddockNames = overview.paddocks.map { it.paddock.name }
 
-        val from = overview.paddocks.find(args.fromPaddock)
+        val from = overview.paddocks.findPaddock(args.fromPaddock)
             ?: return error("Unknown paddock '${args.fromPaddock}'.") { putPaddocks(paddockNames) }
-        val to = overview.paddocks.find(args.toPaddock)
+        val to = overview.paddocks.findPaddock(args.toPaddock)
             ?: return error("Unknown paddock '${args.toPaddock}'.") { putPaddocks(paddockNames) }
         if (from.paddock.id == to.paddock.id) return error("Source and destination are the same paddock.")
         if (args.headCount <= 0) return error("The number of animals must be greater than 0.")
@@ -97,19 +93,3 @@ class MoveCattleTool @Inject constructor(
     }
 }
 
-/**
- * Finds a paddock by name, forgiving case and spacing ("lote 1", "Lote 1"), or by its number
- * alone ("1") when names are like "Lote 1".
- */
-private fun List<PaddockStock>.find(name: String): PaddockStock? {
-    val wanted = name.normalized()
-    return firstOrNull { it.paddock.name.normalized() == wanted }
-        ?: wanted.toIntOrNull()?.let { number -> firstOrNull { it.paddock.name.number() == number } }
-}
-
-private fun String.normalized() = trim().lowercase().replace(Regex("\\s+"), " ")
-
-private fun String.number(): Int? = Regex("\\d+").find(this)?.value?.toIntOrNull()
-
-private fun JsonObjectBuilder.putPaddocks(names: List<String>) =
-    putJsonArray("paddocks") { names.forEach { add(it) } }
