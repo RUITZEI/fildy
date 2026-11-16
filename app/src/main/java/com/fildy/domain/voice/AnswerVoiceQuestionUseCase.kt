@@ -31,7 +31,8 @@ sealed interface VoiceQuestionStep {
 class NothingHeardException : Exception("Transcription came back empty")
 
 /**
- * Answers a recorded question: speech-to-text → assistant (with tools) → text-to-speech.
+ * Answers a recorded question: speech-to-text → assistant (with tools) → text-to-speech. Keeps
+ * the session's recent exchanges in [history] so follow-up questions have context.
  *
  * Emits each [VoiceQuestionStep] as it starts so the screen can follow along, and completes once
  * the answer has been spoken (or right after [VoiceQuestionStep.Answered] when speaking is off).
@@ -44,6 +45,7 @@ class AnswerVoiceQuestionUseCase @Inject constructor(
     private val textToSpeech: TextToSpeech,
     private val player: AudioPlayer,
     private val settings: VoiceAssistantSettings,
+    private val history: ConversationHistory,
 ) {
     operator fun invoke(recording: File): Flow<VoiceQuestionStep> = flow {
         emit(VoiceQuestionStep.Transcribing)
@@ -53,7 +55,8 @@ class AnswerVoiceQuestionUseCase @Inject constructor(
         emit(VoiceQuestionStep.Heard(question))
 
         emit(VoiceQuestionStep.Thinking)
-        val answer = assistant.answer(question)
+        val answer = assistant.answer(question, history.recent())
+        history.add(question, answer.text)
         emit(VoiceQuestionStep.Answered(answer.text, answer.data))
 
         if (settings.speakAnswers) {

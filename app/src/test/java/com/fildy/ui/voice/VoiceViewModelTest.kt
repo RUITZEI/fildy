@@ -6,6 +6,8 @@ import com.fildy.data.audio.AudioRecorder
 import com.fildy.data.audio.Recording
 import com.fildy.data.speech.SpeechProviderException
 import com.fildy.domain.voice.AnswerVoiceQuestionUseCase
+import com.fildy.domain.voice.ConversationHistory
+import com.fildy.domain.voice.MutableClock
 import com.fildy.domain.voice.FakeAssistant
 import com.fildy.domain.voice.FakePlayer
 import com.fildy.domain.voice.FakeSpeechToText
@@ -47,7 +49,10 @@ class VoiceViewModelTest {
 
     private fun viewModel(speakAnswers: Boolean = true) = VoiceViewModel(
         recorder,
-        AnswerVoiceQuestionUseCase(speechToText, assistant, textToSpeech, player, VoiceAssistantSettings(speakAnswers)),
+        AnswerVoiceQuestionUseCase(
+            speechToText, assistant, textToSpeech, player, VoiceAssistantSettings(speakAnswers),
+            ConversationHistory(MutableClock()),
+        ),
     )
 
     @Test

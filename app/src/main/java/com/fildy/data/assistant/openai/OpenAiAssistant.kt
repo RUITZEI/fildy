@@ -5,6 +5,7 @@ import com.fildy.data.assistant.Assistant
 import com.fildy.data.assistant.AssistantAnswer
 import com.fildy.data.assistant.AssistantException
 import com.fildy.data.assistant.AssistantTool
+import com.fildy.data.assistant.ConversationTurn
 import com.fildy.data.assistant.SystemPrompt
 import com.fildy.data.assistant.ToolOutput
 import com.fildy.data.assistant.ToolResults
@@ -56,12 +57,12 @@ class OpenAiAssistant @Inject constructor(
             .build()
     }
 
-    override suspend fun answer(question: String): AssistantAnswer {
+    override suspend fun answer(question: String, history: List<ConversationTurn>): AssistantAnswer {
         if (config.apiKey.isBlank()) throw AssistantException("OPENAI_API_KEY is not set (local.properties or environment)")
-        Log.d(TAG, "Question: \"$question\" (model=${config.model}, tools=${toolsByName.keys})")
+        Log.d(TAG, "Question: \"$question\" (model=${config.model}, history=${history.size} turns, tools=${toolsByName.keys})")
 
         val instructions = systemPrompt.build()
-        var input: List<ResponseInputItem> = listOf(userMessage(question))
+        var input: List<ResponseInputItem> = conversationInput(history, question)
         var previousResponseId: String? = null
         val toolResults = ToolResults()
 
@@ -137,9 +138,14 @@ class OpenAiAssistant @Inject constructor(
     }
 }
 
-private fun userMessage(text: String): ResponseInputItem = ResponseInputItem.ofEasyInputMessage(
-    EasyInputMessage.builder().role(EasyInputMessage.Role.USER).content(text).build(),
-)
+/** Earlier exchanges as user/assistant messages, oldest first, then the new question. */
+internal fun conversationInput(history: List<ConversationTurn>, question: String): List<ResponseInputItem> =
+    history.flatMap { turn ->
+        listOf(message(EasyInputMessage.Role.USER, turn.question), message(EasyInputMessage.Role.ASSISTANT, turn.answer))
+    } + message(EasyInputMessage.Role.USER, question)
+
+private fun message(role: EasyInputMessage.Role, text: String): ResponseInputItem =
+    ResponseInputItem.ofEasyInputMessage(EasyInputMessage.builder().role(role).content(text).build())
 
 private fun functionCallOutput(call: ResponseFunctionToolCall, output: String): ResponseInputItem =
     ResponseInputItem.ofFunctionCallOutput(
