@@ -9,6 +9,7 @@ import com.fildy.data.model.CattleCategory.COW
 import com.fildy.data.model.CattleCategory.HEIFER
 import com.fildy.data.model.CattleCategory.STEER
 import com.fildy.data.model.FarmOverview
+import com.fildy.data.model.HerdAdjustment
 import com.fildy.data.repository.FarmRepositoryImpl
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -67,7 +68,7 @@ class FarmOverviewTest {
         repository.moveCattle(COW, fromPaddockId = 1, toPaddockId = 4, headCount = 30)
         updates.awaitMatching { it.cows(1) == 120 && it.cows(4) == 30 }
 
-        repository.correctHeadCount(paddockId = 2, category = COW, newHeadCount = 135)
+        repository.adjustHeadCount(paddockId = 2, category = COW, adjustment = HerdAdjustment.Set(135))
         val latest = updates.awaitMatching { it.cows(2) == 135 }
         assertEquals(2242, latest.totalHeadCount) // 2247 - 5 from the correction; the move kept the total
 

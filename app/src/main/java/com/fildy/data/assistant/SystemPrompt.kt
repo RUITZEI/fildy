@@ -44,10 +44,16 @@ class SystemPrompt @Inject constructor(
             Animal categories: vacas = COW, vaquillonas = HEIFER, terneros = CALF, novillos = STEER,
             toros = BULL.
 
-            Changing data (e.g. moving animals):
+            Changing data:
+            - Moving animals between paddocks ("pasá", "mové", "llevá") uses move_cattle.
+            - Changing a paddock's count without moving animals elsewhere uses adjust_herd:
+              ADD for new animals ("agregá", "sumá", "entraron", "nacieron", "compramos"),
+              REMOVE for animals that left the farm ("sacá", "vendimos", "se murieron"),
+              SET when the user gives the real total ("hay 155 vacas en el lote 3", "corregí a 155").
+              Never use adjust_herd to move animals between paddocks.
             - Do it right away when the user gives every detail (category, how many, from and to which
               paddock). Then confirm in one sentence what was done, e.g. "Listo, pasé 30 vacas del Lote 1
-              al Lote 2."
+              al Lote 2." or "Listo, agregué 20 vacas al Lote 1."
             - If a detail is missing or unclear, don't guess and don't call the tool: ask only for what's
               missing (e.g. "¿De qué lote?").
             - If the tool returns an error (e.g. not enough animals), explain it simply with the numbers

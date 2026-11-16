@@ -2,6 +2,7 @@ package com.fildy.ui.voice
 
 import com.fildy.data.assistant.AssistantData
 import com.fildy.data.model.CattleCategory
+import com.fildy.data.model.HerdAdjustment
 import java.time.Instant
 import java.time.LocalDate
 
@@ -33,6 +34,22 @@ sealed interface AnswerCard {
         val count: Int,
         val total: Int,
     ) : AnswerCard
+
+    /**
+     * Receipt for a count adjusted in one paddock: [kind] says how, [amount] is how many were
+     * added/removed (or the total set); counts are for [category] before and after.
+     */
+    data class HerdAdjusted(
+        val category: CattleCategory,
+        val paddockName: String,
+        val kind: Kind,
+        val amount: Int,
+        val previousCount: Int,
+        val newCount: Int,
+        val savedAt: Instant,
+    ) : AnswerCard {
+        enum class Kind { ADD, REMOVE, SET }
+    }
 
     /** Receipt for animals moved between paddocks; counts are for [category] after the move. */
     data class CattleMoved(
@@ -78,6 +95,23 @@ fun AssistantData.toAnswerCard(): AnswerCard = when (this) {
             total = total,
         )
     }
+    is AssistantData.HerdAdjusted -> AnswerCard.HerdAdjusted(
+        category = change.category,
+        paddockName = paddockName,
+        kind = when (adjustment) {
+            is HerdAdjustment.Add -> AnswerCard.HerdAdjusted.Kind.ADD
+            is HerdAdjustment.Remove -> AnswerCard.HerdAdjusted.Kind.REMOVE
+            is HerdAdjustment.Set -> AnswerCard.HerdAdjusted.Kind.SET
+        },
+        amount = when (adjustment) {
+            is HerdAdjustment.Add -> adjustment.headCount
+            is HerdAdjustment.Remove -> adjustment.headCount
+            is HerdAdjustment.Set -> adjustment.headCount
+        },
+        previousCount = change.previousHeadCount,
+        newCount = change.newHeadCount,
+        savedAt = change.recordedAt,
+    )
     is AssistantData.CattleMoved -> AnswerCard.CattleMoved(
         category = move.category,
         headCount = move.headCount,

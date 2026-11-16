@@ -61,6 +61,7 @@ fun AnswerCardView(card: AnswerCard, modifier: Modifier = Modifier) {
         is AnswerCard.RainPeriod -> RainPeriodCard(card, modifier)
         is AnswerCard.PaddockHerd -> PaddockHerdCard(card, modifier)
         is AnswerCard.PaddockCategory -> PaddockCategoryCard(card, modifier)
+        is AnswerCard.HerdAdjusted -> HerdAdjustedCard(card, modifier)
         is AnswerCard.CattleMoved -> CattleMovedCard(card, modifier)
     }
 }
@@ -137,40 +138,75 @@ private fun PaddockHerdCard(card: AnswerCard.PaddockHerd, modifier: Modifier = M
     }
 }
 
-/**
- * Receipt for a herd move, like the design's "Comprobante": overline, what was done, the counts
- * after the move, a dashed cut line and when it was saved.
- */
+/** Receipt for a herd move: "30 vacas del Lote 1 al Lote 2" and the counts after it. */
 @Composable
 private fun CattleMovedCard(card: AnswerCard.CattleMoved, modifier: Modifier = Modifier) {
+    ReceiptCard(
+        overline = stringResource(R.string.answer_card_herd_move),
+        title = stringResource(
+            R.string.answer_card_move,
+            pluralStringResource(card.category.countPluralRes, card.headCount, card.headCount),
+            card.fromPaddockName,
+            card.toPaddockName,
+        ),
+        detail = stringResource(
+            R.string.answer_card_move_counts,
+            card.remainingInSource,
+            card.fromPaddockName,
+            card.totalInDestination,
+            card.toPaddockName,
+        ),
+        savedAt = card.savedAt,
+        modifier = modifier,
+    )
+}
+
+/** Receipt for an adjusted count: "Se agregaron 20 vacas al Lote 1", then "Antes 150 → ahora 170". */
+@Composable
+private fun HerdAdjustedCard(card: AnswerCard.HerdAdjusted, modifier: Modifier = Modifier) {
+    val count = pluralStringResource(card.category.countPluralRes, card.amount, card.amount)
+    val title = when (card.kind) {
+        AnswerCard.HerdAdjusted.Kind.ADD ->
+            pluralStringResource(R.plurals.answer_card_adjust_add, card.amount, count, card.paddockName)
+        AnswerCard.HerdAdjusted.Kind.REMOVE ->
+            pluralStringResource(R.plurals.answer_card_adjust_remove, card.amount, count, card.paddockName)
+        AnswerCard.HerdAdjusted.Kind.SET ->
+            stringResource(R.string.answer_card_adjust_set, stringResource(card.category.labelRes), card.paddockName, card.newCount)
+    }
+    ReceiptCard(
+        overline = stringResource(R.string.answer_card_herd_adjust),
+        title = title,
+        detail = stringResource(R.string.answer_card_adjust_counts, card.previousCount, card.newCount),
+        savedAt = card.savedAt,
+        modifier = modifier,
+    )
+}
+
+/**
+ * A saved change, like the design's "Comprobante": overline, what was done, a detail line, a
+ * dashed cut line and when it was saved.
+ */
+@Composable
+private fun ReceiptCard(
+    overline: String,
+    title: String,
+    detail: String,
+    savedAt: Instant,
+    modifier: Modifier = Modifier,
+) {
     DataCard(modifier) {
-        Overline(R.drawable.ic_grid, stringResource(R.string.answer_card_herd_move))
+        Overline(R.drawable.ic_grid, overline)
         Spacer(Modifier.height(6.dp))
+        Text(text = title, style = MaterialTheme.typography.titleLarge, color = Tinta)
         Text(
-            text = stringResource(
-                R.string.answer_card_move,
-                pluralStringResource(card.category.countPluralRes, card.headCount, card.headCount),
-                card.fromPaddockName,
-                card.toPaddockName,
-            ),
-            style = MaterialTheme.typography.titleLarge,
-            color = Tinta,
-        )
-        Text(
-            text = stringResource(
-                R.string.answer_card_move_counts,
-                card.remainingInSource,
-                card.fromPaddockName,
-                card.totalInDestination,
-                card.toPaddockName,
-            ),
+            text = detail,
             style = MaterialTheme.typography.bodyMedium,
             color = Musgo,
             modifier = Modifier.padding(top = 2.dp),
         )
         DashedDivider(Modifier.padding(top = 12.dp, bottom = 8.dp))
         Text(
-            text = stringResource(R.string.answer_card_saved_at, card.savedAt.timeLabel()),
+            text = stringResource(R.string.answer_card_saved_at, savedAt.timeLabel()),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
             color = Musgo,
@@ -329,6 +365,28 @@ private fun AnswerCardsPreview() {
                 ),
             )
             AnswerCardView(AnswerCard.PaddockCategory("Lote 1", CattleCategory.COW, count = 150, total = 348))
+            AnswerCardView(
+                AnswerCard.HerdAdjusted(
+                    category = CattleCategory.COW,
+                    paddockName = "Lote 1",
+                    kind = AnswerCard.HerdAdjusted.Kind.ADD,
+                    amount = 20,
+                    previousCount = 150,
+                    newCount = 170,
+                    savedAt = Instant.parse("2026-11-16T22:48:00Z"),
+                ),
+            )
+            AnswerCardView(
+                AnswerCard.HerdAdjusted(
+                    category = CattleCategory.BULL,
+                    paddockName = "Lote 8",
+                    kind = AnswerCard.HerdAdjusted.Kind.REMOVE,
+                    amount = 1,
+                    previousCount = 300,
+                    newCount = 299,
+                    savedAt = Instant.parse("2026-11-16T22:50:00Z"),
+                ),
+            )
             AnswerCardView(
                 AnswerCard.CattleMoved(
                     category = CattleCategory.COW,

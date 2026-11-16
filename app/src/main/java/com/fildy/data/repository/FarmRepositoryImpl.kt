@@ -11,6 +11,7 @@ import com.fildy.data.local.relation.toDomain
 import com.fildy.data.model.CattleCategory
 import com.fildy.data.model.Farm
 import com.fildy.data.model.FarmOverview
+import com.fildy.data.model.HerdAdjustment
 import com.fildy.data.model.StockChange
 import java.time.Clock
 import javax.inject.Inject
@@ -52,24 +53,41 @@ class FarmRepositoryImpl @Inject constructor(
         change.copy(id = changeDao.insert(change.toEntity()))
     }.also { Log.i(TAG, "Moved ${it.headCount} $category: paddock ${it.fromPaddockId} → ${it.toPaddockId}") }
 
-    override suspend fun correctHeadCount(
+    override suspend fun adjustHeadCount(
         paddockId: Long,
         category: CattleCategory,
-        newHeadCount: Int,
+        adjustment: HerdAdjustment,
     ): StockChange.Correction = transaction {
-        require(newHeadCount >= 0) { "Head count can't be negative: $newHeadCount" }
+        // Read and write in the same transaction so a concurrent change can't be lost.
         val previous = herdDao.getHeadCount(paddockId, category)
-        herdDao.setHeadCount(paddockId, category, newHeadCount)
+        val new = when (adjustment) {
+            is HerdAdjustment.Add -> {
+                require(adjustment.headCount > 0) { "Head count to add must be positive: ${adjustment.headCount}" }
+                previous + adjustment.headCount
+            }
+            is HerdAdjustment.Remove -> {
+                require(adjustment.headCount > 0) { "Head count to remove must be positive: ${adjustment.headCount}" }
+                require(adjustment.headCount <= previous) {
+                    "Paddock $paddockId has only $previous $category, can't remove ${adjustment.headCount}"
+                }
+                previous - adjustment.headCount
+            }
+            is HerdAdjustment.Set -> {
+                require(adjustment.headCount >= 0) { "Head count can't be negative: ${adjustment.headCount}" }
+                adjustment.headCount
+            }
+        }
+        herdDao.setHeadCount(paddockId, category, new)
         val change = StockChange.Correction(
             id = 0,
             category = category,
             recordedAt = clock.instant(),
             paddockId = paddockId,
             previousHeadCount = previous,
-            newHeadCount = newHeadCount,
+            newHeadCount = new,
         )
         change.copy(id = changeDao.insert(change.toEntity()))
-    }.also { Log.i(TAG, "Corrected $category in paddock $paddockId: ${it.previousHeadCount} → ${it.newHeadCount}") }
+    }.also { Log.i(TAG, "Adjusted $category in paddock $paddockId ($adjustment): ${it.previousHeadCount} → ${it.newHeadCount}") }
 
     override suspend fun undo(change: StockChange) {
         transaction {

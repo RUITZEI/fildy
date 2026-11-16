@@ -3,6 +3,7 @@ package com.fildy.data.repository
 import com.fildy.data.model.CattleCategory
 import com.fildy.data.model.Farm
 import com.fildy.data.model.FarmOverview
+import com.fildy.data.model.HerdAdjustment
 import com.fildy.data.model.StockChange
 import kotlinx.coroutines.flow.Flow
 
@@ -28,11 +29,16 @@ interface FarmRepository {
         headCount: Int,
     ): StockChange.Move
 
-    /** Sets the head count of [category] in a paddock and records the change. */
-    suspend fun correctHeadCount(
+    /**
+     * Adds, removes or sets the head count of [category] in a paddock. Recorded as a correction
+     * from the previous count to the new one, so it can be undone.
+     * @throws IllegalArgumentException if the adjustment is invalid: a non-positive amount to add
+     * or remove, a negative count to set, or removing more animals than the paddock has.
+     */
+    suspend fun adjustHeadCount(
         paddockId: Long,
         category: CattleCategory,
-        newHeadCount: Int,
+        adjustment: HerdAdjustment,
     ): StockChange.Correction
 
     /**

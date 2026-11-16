@@ -1,6 +1,7 @@
 package com.fildy.data.assistant
 
 import com.fildy.data.model.CattleCategory
+import com.fildy.data.model.HerdAdjustment
 import com.fildy.data.model.RainfallRecord
 import com.fildy.data.model.StockChange
 import java.time.LocalDate
@@ -32,6 +33,17 @@ sealed interface AssistantData {
     ) : AssistantData {
         val total: Int get() = headCounts.values.sum()
     }
+
+    /**
+     * The count of one category in a paddock was adjusted ([adjustment]: add, remove or set).
+     * [change] is the saved correction (previous → new count); it can be undone with
+     * `FarmRepository.undo`.
+     */
+    data class HerdAdjusted(
+        val change: StockChange.Correction,
+        val paddockName: String,
+        val adjustment: HerdAdjustment,
+    ) : AssistantData
 
     /**
      * Animals moved between paddocks. [move] is the saved change (it can be undone with

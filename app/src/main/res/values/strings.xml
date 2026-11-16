@@ -100,6 +100,22 @@
         <item quantity="one">toro</item>
         <item quantity="other">toros</item>
     </plurals>
+    <!-- Herd adjustment receipt, e.g. "HACIENDA · AJUSTE" (shown uppercase) -->
+    <string name="answer_card_herd_adjust">Hacienda · Ajuste</string>
+    <!-- e.g. "Se agregaron 20 vacas al Lote 1" (count with category, paddock) -->
+    <plurals name="answer_card_adjust_add">
+        <item quantity="one">Se agregó %1$s al %2$s</item>
+        <item quantity="other">Se agregaron %1$s al %2$s</item>
+    </plurals>
+    <!-- e.g. "Se sacaron 10 toros del Lote 8" -->
+    <plurals name="answer_card_adjust_remove">
+        <item quantity="one">Se sacó %1$s del %2$s</item>
+        <item quantity="other">Se sacaron %1$s del %2$s</item>
+    </plurals>
+    <!-- e.g. "Vacas del Lote 3: ahora 155" (category, paddock, new total) -->
+    <string name="answer_card_adjust_set">%1$s del %2$s: ahora %3$d</string>
+    <!-- e.g. "Antes 150 → ahora 170" -->
+    <string name="answer_card_adjust_counts">Antes %1$d → ahora %2$d</string>
     <!-- Herd move receipt, e.g. "HACIENDA · MOVIMIENTO" (shown uppercase) -->
     <string name="answer_card_herd_move">Hacienda · Movimiento</string>
     <!-- e.g. "30 vacas del Lote 1 al Lote 2" (count with category, from, to) -->

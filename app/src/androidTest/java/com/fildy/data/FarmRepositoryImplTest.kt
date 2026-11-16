@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.fildy.data.local.FildyDatabase
 import com.fildy.data.model.CattleCategory.COW
 import com.fildy.data.model.CattleCategory.HEIFER
+import com.fildy.data.model.HerdAdjustment
 import com.fildy.data.model.StockChange
 import com.fildy.data.repository.FarmRepositoryImpl
 import kotlinx.coroutines.flow.first
@@ -79,7 +80,7 @@ class FarmRepositoryImplTest {
 
     @Test
     fun correction_andUndo() = runTest {
-        val correction = repository.correctHeadCount(paddockId = 3, category = COW, newHeadCount = 155)
+        val correction = repository.adjustHeadCount(paddockId = 3, category = COW, adjustment = HerdAdjustment.Set(155))
         assertEquals(160, correction.previousHeadCount)
         assertEquals(155, count(3, COW))
 

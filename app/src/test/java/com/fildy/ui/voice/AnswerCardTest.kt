@@ -2,6 +2,7 @@ package com.fildy.ui.voice
 
 import com.fildy.data.assistant.AssistantData
 import com.fildy.data.model.CattleCategory
+import com.fildy.data.model.HerdAdjustment
 import com.fildy.data.model.RainfallRecord
 import com.fildy.data.model.StockChange
 import org.junit.Assert.assertEquals
@@ -97,5 +98,31 @@ class AnswerCardTest {
         )
 
         assertEquals(AnswerCard.PaddockCategory("Lote 1", CattleCategory.COW, count = 150, total = 348), data.toAnswerCard())
+    }
+
+    @Test
+    fun herdAdjusted_becomesAReceipt() {
+        val change = StockChange.Correction(
+            id = 3,
+            category = CattleCategory.BULL,
+            recordedAt = Instant.parse("2026-11-16T22:50:00Z"),
+            paddockId = 8,
+            previousHeadCount = 300,
+            newHeadCount = 290,
+        )
+        val card = AssistantData.HerdAdjusted(change, "Lote 8", HerdAdjustment.Remove(10)).toAnswerCard()
+
+        assertEquals(
+            AnswerCard.HerdAdjusted(
+                category = CattleCategory.BULL,
+                paddockName = "Lote 8",
+                kind = AnswerCard.HerdAdjusted.Kind.REMOVE,
+                amount = 10,
+                previousCount = 300,
+                newCount = 290,
+                savedAt = Instant.parse("2026-11-16T22:50:00Z"),
+            ),
+            card,
+        )
     }
 }

@@ -2,6 +2,7 @@ package com.fildy.ui.home
 
 import com.fildy.data.model.CattleCategory
 import com.fildy.data.model.FarmOverview
+import com.fildy.data.model.HerdAdjustment
 import com.fildy.data.model.RainfallRecord
 import com.fildy.data.model.RainfallUpdate
 import com.fildy.data.model.StockChange
@@ -49,7 +50,35 @@ class FakeFarmRepository : FarmRepository {
             headCount = headCount,
         ).also { moves += it }
     }
-    override suspend fun correctHeadCount(paddockId: Long, category: CattleCategory, newHeadCount: Int) = TODO()
+    val adjustments = mutableListOf<StockChange.Correction>()
+
+    /** Adjusts a count inside [overview], validating like the real repository. */
+    override suspend fun adjustHeadCount(
+        paddockId: Long,
+        category: CattleCategory,
+        adjustment: HerdAdjustment,
+    ): StockChange.Correction {
+        val current = checkNotNull(overview.value)
+        val previous = current.paddocks.first { it.paddock.id == paddockId }.headCount(category)
+        val new = when (adjustment) {
+            is HerdAdjustment.Add -> previous + adjustment.headCount
+            is HerdAdjustment.Remove -> previous - adjustment.headCount.also { require(it <= previous) }
+            is HerdAdjustment.Set -> adjustment.headCount
+        }
+        overview.value = current.copy(
+            paddocks = current.paddocks.map { stock ->
+                if (stock.paddock.id == paddockId) stock.copy(headCounts = stock.headCounts + (category to new)) else stock
+            },
+        )
+        return StockChange.Correction(
+            id = adjustments.size + 1L,
+            category = category,
+            recordedAt = Instant.parse("2026-11-16T22:48:00Z"),
+            paddockId = paddockId,
+            previousHeadCount = previous,
+            newHeadCount = new,
+        ).also { adjustments += it }
+    }
     override suspend fun undo(change: StockChange) = TODO()
 }
 
