@@ -1,0 +1,39 @@
+{
+  "farm": { "id": 1, "name": "La Tranquera", "locality": "Castelli", "province": "Buenos Aires" },
+  "paddocks": [
+    { "id": 1, "name": "Lote 1" },
+    { "id": 2, "name": "Lote 2" },
+    { "id": 3, "name": "Lote 3" },
+    { "id": 4, "name": "Lote 4" },
+    { "id": 5, "name": "Lote 5" },
+    { "id": 6, "name": "Lote 6" },
+    { "id": 7, "name": "Lote 7" },
+    { "id": 8, "name": "Lote 8" }
+  ],
+  "herd": [
+    { "paddockId": 1, "category": "COW",    "headCount": 150 },
+    { "paddockId": 1, "category": "CALF",   "headCount": 148 },
+    { "paddockId": 1, "category": "BULL",   "headCount": 50 },
+    { "paddockId": 2, "category": "COW",    "headCount": 140 },
+    { "paddockId": 2, "category": "CALF",   "headCount": 139 },
+    { "paddockId": 2, "category": "BULL",   "headCount": 50 },
+    { "paddockId": 3, "category": "COW",    "headCount": 160 },
+    { "paddockId": 3, "category": "CALF",   "headCount": 165 },
+    { "paddockId": 3, "category": "BULL",   "headCount": 50 },
+    { "paddockId": 4, "category": "HEIFER", "headCount": 230 },
+    { "paddockId": 5, "category": "HEIFER", "headCount": 218 },
+    { "paddockId": 6, "category": "STEER",  "headCount": 240 },
+    { "paddockId": 7, "category": "STEER",  "headCount": 207 },
+    { "paddockId": 8, "category": "BULL",   "headCount": 300 }
+  ],
+  "rainfall": [
+    { "date": "2026-09-21", "millimeters": 24 },
+    { "date": "2026-09-30", "millimeters": 11 },
+    { "date": "2026-10-08", "millimeters": 21 },
+    { "date": "2026-10-17", "millimeters": 6 },
+    { "date": "2026-10-24", "millimeters": 23 },
+    { "date": "2026-10-31", "millimeters": 9 },
+    { "date": "2026-11-07", "millimeters": 19 },
+    { "date": "2026-11-15", "millimeters": 18 }
+  ]
+}
