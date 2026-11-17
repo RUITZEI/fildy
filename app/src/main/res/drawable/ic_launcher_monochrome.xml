@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed icon (Android 13+), the design's "Temático" version: the tree and a ground line in one
+     color. Only the shape is used; the system tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M53,52h2a2,2 0,0 1,2 2v18a2,2 0,0 1,-2 2h-2a2,2 0,0 1,-2 -2v-18a2,2 0,0 1,2 -2z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M54,24a16,16 0,1 1,0 32a16,16 0,1 1,0 -32z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M40,39a11,11 0,1 1,0 22a11,11 0,1 1,0 -22z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M68,39a11,11 0,1 1,0 22a11,11 0,1 1,0 -22z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M54,39a13,13 0,1 1,0 26a13,13 0,1 1,0 -26z" />
+    <path
+        android:pathData="M24,78C40,72 68,72 84,78"
+        android:strokeWidth="4"
+        android:strokeColor="#FF000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

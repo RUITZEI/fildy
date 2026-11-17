@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Android 12+ system splash screen: the launcher icon's tree on Bosque green. -->
+    <style name="Theme.Fildy" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/bosque</item>
+        <item name="android:windowSplashScreenBackground">@color/bosque</item>
+    </style>
+</resources>

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Fildy" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Fildy" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Shown while the app starts (and behind the UI): Bosque green, no white flash. -->
+        <item name="android:windowBackground">@color/bosque</item>
+    </style>
 </resources>
