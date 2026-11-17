@@ -20,6 +20,7 @@ import com.fildy.ui.components.VoiceButton
 import com.fildy.ui.components.VoiceButtonState
 import com.fildy.ui.components.sharedContainer
 import com.fildy.ui.home.farm.FarmCard
+import com.fildy.ui.home.header.HomeHeader
 import com.fildy.ui.home.rain.RainCard
 import com.fildy.ui.home.weather.WeatherSection
 
@@ -41,6 +42,8 @@ fun HomeScreen(
                 .navigationBarsPadding()
                 .padding(start = 18.dp, top = 30.dp, end = 18.dp, bottom = VoicePillClearance),
         ) {
+            HomeHeader()
+            Spacer(Modifier.height(18.dp))
             WeatherSection()
             Spacer(Modifier.height(16.dp))
             // Cards cascade in as their data loads, 60 ms apart (design: 40–80 ms).

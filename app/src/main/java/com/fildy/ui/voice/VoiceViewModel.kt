@@ -37,6 +37,24 @@ class VoiceViewModel @Inject constructor(
 
     private var levelPolling: Job? = null
 
+    /** Recordings started since the screen opened; only the first one shows the prompt. */
+    private var recordingsStarted = 0
+
+    /** Whether the "start recording when the screen opens" request was already handled. */
+    private var autoStartHandled = false
+
+    /**
+     * Starts recording because the screen was opened to talk (not by a tap). Only once per
+     * screen: recreating the UI (e.g. rotating) or coming back to it doesn't start it again.
+     * Call only once the RECORD_AUDIO permission is granted.
+     */
+    fun startRecordingOnOpen() {
+        if (autoStartHandled) return
+        autoStartHandled = true
+        Log.d(TAG, "Opened to talk: starting to record right away")
+        startRecording()
+    }
+
     /** Call only once the RECORD_AUDIO permission is granted. */
     fun startRecording() {
         if (_uiState.value.phase != VoicePhase.Idle) {
@@ -45,8 +63,15 @@ class VoiceViewModel @Inject constructor(
         }
         try {
             recorder.start()
+            val firstRecording = recordingsStarted++ == 0
             setPhase(VoicePhase.Recording) {
-                it.copy(answer = null, answerCards = emptyList(), errorMessage = null, audioLevels = emptyList())
+                it.copy(
+                    answer = null,
+                    answerCards = emptyList(),
+                    errorMessage = null,
+                    audioLevels = emptyList(),
+                    showRecordingPrompt = firstRecording,
+                )
             }
             startLevelPolling()
         } catch (e: Exception) {

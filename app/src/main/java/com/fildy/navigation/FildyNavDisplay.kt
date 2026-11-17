@@ -49,10 +49,11 @@ fun FildyNavDisplay() {
                 predictivePopTransitionSpec = { crossfade() },
                 entryProvider = entryProvider {
                     entry<Home> {
-                        HomeScreen(onVoiceClick = { backStack.add(Voice) })
+                        HomeScreen(onVoiceClick = { backStack.add(Voice(startRecording = true)) })
                     }
-                    entry<Voice> {
+                    entry<Voice> { key ->
                         VoiceScreen(
+                            startRecording = key.startRecording,
                             onKeyboardClick = { /* TODO: Open keyboard input. */ },
                             onClose = { backStack.removeLastOrNull() },
                         )

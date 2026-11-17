@@ -2,10 +2,11 @@ package com.fildy.ui.home.farm
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,16 +16,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fildy.R
@@ -60,9 +63,6 @@ fun FarmCard(
     }
 }
 
-/** Categories per row: 3 on top, 2 below, so every label fits at its full size. */
-private const val FIRST_ROW_SIZE = 3
-
 @Composable
 fun FarmCard(state: FarmUiState.Success, modifier: Modifier = Modifier) {
     val locale = rememberAppLocale()
@@ -77,44 +77,63 @@ fun FarmCard(state: FarmUiState.Success, modifier: Modifier = Modifier) {
             unit = stringResource(R.string.farm_card_head_unit),
         )
         Spacer(Modifier.height(14.dp))
-        CountsRow(state.headCounts.take(FIRST_ROW_SIZE), locale)
-        Spacer(
-            Modifier
-                .padding(vertical = 10.dp)
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(Divider),
-        )
-        CountsRow(state.headCounts.drop(FIRST_ROW_SIZE), locale)
+        CountsRow(state.headCounts, locale)
     }
 }
 
-/** Equal-width category columns separated by thin vertical dividers. */
+/**
+ * All categories on one line. Columns take their natural width (labels differ a lot: "Toros" vs
+ * "Vaquillonas") and the spare space is spread between them, around thin dividers, so 5 columns
+ * fit on a phone at the design's sizes (Title M numbers, 13 sp labels).
+ *
+ * With a large system font size the row could overflow; then every number and label shrinks by
+ * the same factor, just enough to fit, so the sizes stay consistent.
+ */
 @Composable
 private fun CountsRow(counts: List<CategoryCount>, locale: Locale) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min),
-    ) {
-        counts.forEachIndexed { index, count ->
-            if (index > 0) VerticalDivider()
-            CategoryColumn(count, locale)
+    val numberStyle = MaterialTheme.typography.titleMedium
+    val labelStyle = MaterialTheme.typography.bodySmall
+    val measurer = rememberTextMeasurer()
+    val labels = counts.map { stringResource(it.category.labelRes) }
+    val density = LocalDensity.current
+
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val neededPx = counts.indices.sumOf { i ->
+            maxOf(
+                measurer.measure(counts[i].headCount.formatted(locale), numberStyle).size.width,
+                measurer.measure(labels[i], labelStyle).size.width,
+            )
+        } + with(density) { (MinColumnGap * (counts.size - 1)).roundToPx() }
+        val available = constraints.maxWidth
+        val fit = if (neededPx > available) available.toFloat() / neededPx else 1f
+
+        CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale * fit)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
+            ) {
+                counts.forEachIndexed { index, count ->
+                    if (index > 0) VerticalDivider()
+                    CategoryColumn(count, locale)
+                }
+            }
         }
     }
 }
 
+/** Least room between two columns: the divider plus a little air on each side. */
+private val MinColumnGap = 7.dp
+
 @Composable
-private fun RowScope.CategoryColumn(count: CategoryCount, locale: Locale) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.weight(1f),
-    ) {
+private fun CategoryColumn(count: CategoryCount, locale: Locale) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        // Title M (17/22 ExtraBold) from the type scale.
         Text(
             text = count.headCount.formatted(locale),
-            style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, letterSpacing = (-0.3).sp),
-            fontWeight = FontWeight.ExtraBold,
+            style = MaterialTheme.typography.titleMedium,
             color = Tinta,
         )
         Text(
@@ -123,6 +142,7 @@ private fun RowScope.CategoryColumn(count: CategoryCount, locale: Locale) {
             color = Musgo,
             textAlign = TextAlign.Center,
             maxLines = 1,
+            softWrap = false,
         )
     }
 }
@@ -148,6 +168,7 @@ val CattleCategory.labelRes: Int
     }
 
 @Preview(widthDp = 360)
+@Preview(widthDp = 360, fontScale = 1.3f, name = "Large font")
 @Composable
 private fun FarmCardPreview() {
     FildyTheme {

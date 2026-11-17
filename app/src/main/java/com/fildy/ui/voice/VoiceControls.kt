@@ -31,6 +31,7 @@ import com.fildy.ui.theme.FildyMotion
 @Composable
 fun VoiceControls(
     phase: VoicePhase,
+    hasMicPermission: Boolean,
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
     onKeyboardClick: () -> Unit,
@@ -74,6 +75,7 @@ fun VoiceControls(
             targetState = when {
                 isRecording -> R.string.voice_tap_to_finish
                 isBusy -> R.string.voice_wait
+                !hasMicPermission -> R.string.voice_tap_to_allow
                 else -> R.string.voice_tap_to_talk
             },
             transitionSpec = {

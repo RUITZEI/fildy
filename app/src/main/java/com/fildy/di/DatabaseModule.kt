@@ -2,6 +2,7 @@ package com.fildy.di
 
 import android.content.Context
 import androidx.room.Room
+import com.fildy.data.FarmTimeZone
 import com.fildy.data.local.FildyDatabase
 import com.fildy.data.local.RoomTransactionRunner
 import com.fildy.data.local.TransactionRunner
@@ -54,9 +55,12 @@ abstract class DatabaseModule {
         @Provides
         fun provideStockChangeDao(database: FildyDatabase): StockChangeDao = database.stockChangeDao()
 
-        /** Injectable clock so time-dependent logic (60-day window, timestamps) can be tested. */
+        /**
+         * Injectable clock so time-dependent logic (60-day window, timestamps) can be tested. Set
+         * to the farm's time zone (Buenos Aires), whatever the phone is set to.
+         */
         @Provides
         @Singleton
-        fun provideClock(): Clock = Clock.systemDefaultZone()
+        fun provideClock(): Clock = Clock.system(FarmTimeZone)
     }
 }

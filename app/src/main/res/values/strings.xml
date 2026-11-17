@@ -3,6 +3,9 @@
     <!-- Language of these strings; used to format dates and numbers to match. -->
     <string name="locale_tag" translatable="false">es-AR</string>
 
+    <!-- Home header, e.g. "Hola, Francisco" -->
+    <string name="home_greeting">Hola, %s</string>
+
     <!-- Weather -->
     <string name="weather_temperature">%1$d°</string>
     <string name="weather_condition_clear">Despejado</string>
@@ -17,12 +20,18 @@
     <!-- Voice -->
     <string name="voice_tap_to_talk">Tocá y hablá</string>
     <string name="voice_tap_to_finish">Tocá para terminar</string>
+    <!-- While recording -->
     <string name="voice_prompt_title">Te escucho…</string>
     <string name="voice_prompt_hint">Contame qué pasó o preguntá algo.\nPor ejemplo: “¿Cuánto llovió este mes?”</string>
-    <string name="voice_listening">Escuchando</string>
+    <!-- Not recording, microphone allowed -->
+    <string name="voice_ready_title">¿En qué te ayudo?</string>
+    <string name="voice_ready_hint">Tocá el micrófono y contame qué pasó o preguntá algo.</string>
+    <!-- Not recording, microphone not allowed yet -->
+    <string name="voice_permission_title">Necesito tu permiso</string>
+    <string name="voice_permission_hint">Para escucharte necesito usar el micrófono.\nTocá el botón para darme permiso.</string>
+    <string name="voice_tap_to_allow">Tocá para dar permiso</string>
     <string name="voice_processing">Procesando…</string>
     <string name="voice_thinking">Pensando…</string>
-    <string name="voice_speaking">Respondiendo</string>
     <string name="voice_wait">Un momento…</string>
     <string name="voice_error_generic">Algo salió mal. Probá de nuevo.</string>
     <string name="voice_error_too_short">Fue muy corto. Hablá un poco más antes de terminar.</string>

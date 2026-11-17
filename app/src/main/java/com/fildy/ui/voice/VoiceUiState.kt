@@ -15,6 +15,11 @@ data class VoiceUiState(
     @StringRes val errorMessage: Int? = null,
     /** Recent microphone loudness (0–1), oldest first, while recording. Drives the waveform. */
     val audioLevels: List<Float> = emptyList(),
+    /**
+     * Show the "Te escucho…" prompt while recording. Only for the first recording since the screen
+     * opened; follow-ups don't need the explanation again.
+     */
+    val showRecordingPrompt: Boolean = true,
 ) {
     /** True once the user has started talking: the sphere moves to the top. */
     val isCompact: Boolean

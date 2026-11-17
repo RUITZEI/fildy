@@ -120,6 +120,37 @@ class VoiceViewModelTest {
     }
 
     @Test
+    fun startRecordingOnOpen_startsOnlyOnce() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.startRecordingOnOpen()
+        assertEquals(VoicePhase.Recording, vm.uiState.value.phase)
+        assertEquals(1, recorder.starts)
+
+        // e.g. the UI is recreated after the user already stopped: don't record again.
+        vm.stopRecording()
+        advanceUntilIdle()
+        vm.startRecordingOnOpen()
+        assertEquals(VoicePhase.Idle, vm.uiState.value.phase)
+        assertEquals(1, recorder.starts)
+    }
+
+    @Test
+    fun recordingPrompt_onlyOnTheFirstRecording() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.startRecording()
+        assertEquals(true, vm.uiState.value.showRecordingPrompt)
+        vm.stopRecording()
+        advanceUntilIdle()
+
+        vm.startRecording() // a follow-up question
+        assertEquals(false, vm.uiState.value.showRecordingPrompt)
+        vm.stopRecording()
+        advanceUntilIdle()
+    }
+
+    @Test
     fun tooShortRecording_showsError() {
         recorder.nextRecording = null
         val vm = viewModel()
@@ -164,7 +195,10 @@ class VoiceViewModelTest {
         val lastFile: File = File.createTempFile("rec", ".m4a")
         var nextRecording: Recording? = Recording(lastFile, 1_500)
         var levels = ArrayDeque<Float>()
-        override fun start() = Unit
+        var starts = 0
+        override fun start() {
+            starts++
+        }
         override fun stop() = nextRecording
         override fun cancel() = Unit
         override fun level() = levels.removeFirstOrNull() ?: 0f

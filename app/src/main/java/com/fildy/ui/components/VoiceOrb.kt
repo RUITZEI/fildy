@@ -3,6 +3,7 @@ package com.fildy.ui.components
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.InfiniteTransition
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -38,16 +39,36 @@ import com.fildy.ui.theme.OrbEdge
 import com.fildy.ui.theme.OrbMid
 import com.fildy.ui.theme.forestBackground
 
+/** How the voice sphere breathes. */
+enum class OrbBreathing(
+    /** Half a breath (grow or shrink), in ms. */
+    val halfPeriodMs: Int,
+    /** How much bigger it gets at the top of a breath (0.06 = 6%). */
+    val amplitude: Float,
+) {
+    /** At rest: slow and subtle (3.2 s per breath). */
+    Calm(halfPeriodMs = 1600, amplitude = 0.06f),
+
+    /** While the user talks: quick, still subtle (1.1 s per breath). */
+    Listening(halfPeriodMs = 550, amplitude = 0.06f),
+
+    /** While the app talks back: a quick, visible heartbeat (~0.44 s per beat, 10%). */
+    Speaking(halfPeriodMs = 220, amplitude = 0.10f),
+}
+
 /**
  * The living voice sphere: a green orb with soft blobs drifting inside it and a halo around it.
- * It always breathes (scales 1 → 1.06); [fastBreathing] speeds it up while the user is speaking.
+ * It always breathes; [breathing] sets how fast and how deep.
  *
- * The orb fills this composable's size. The halo extends 22% beyond it, so leave room around it.
+ * The orb fills this composable's size. The halo extends 22% beyond it (more at the top of a
+ * breath), so leave room around it.
  */
 @Composable
-fun VoiceOrb(modifier: Modifier = Modifier, fastBreathing: Boolean = false) {
+fun VoiceOrb(modifier: Modifier = Modifier, breathing: OrbBreathing = OrbBreathing.Calm) {
     val transition = rememberInfiniteTransition(label = "voiceOrb")
-    val breath by transition.loop(if (fastBreathing) 550 else 1600, "breath")
+    val breath by transition.loop(breathing.halfPeriodMs, "breath")
+    // Ease between depths so switching modes doesn't make the sphere jump.
+    val amplitude by animateFloatAsState(breathing.amplitude, tween(400), label = "breathAmplitude")
     val blob1 by transition.loop(3000, "blob1")
     val blob2 by transition.loop(3750, "blob2")
     val blob3 by transition.loop(2500, "blob3")
@@ -55,7 +76,7 @@ fun VoiceOrb(modifier: Modifier = Modifier, fastBreathing: Boolean = false) {
     Canvas(modifier) {
         val diameter = size.minDimension
         val center = Offset(size.width / 2, size.height / 2)
-        scale(1f + 0.06f * breath, pivot = center) {
+        scale(1f + amplitude * breath, pivot = center) {
             drawHalo(center, diameter)
             drawBody(center, diameter, blob1, blob2, blob3)
         }
@@ -194,7 +215,7 @@ private fun VoiceOrbPreview() {
             horizontalArrangement = Arrangement.spacedBy(48.dp),
         ) {
             VoiceOrb(Modifier.size(160.dp))
-            VoiceOrb(Modifier.size(64.dp), fastBreathing = true)
+            VoiceOrb(Modifier.size(64.dp), breathing = OrbBreathing.Speaking)
         }
     }
 }

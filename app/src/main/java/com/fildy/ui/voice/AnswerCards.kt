@@ -34,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fildy.R
+import com.fildy.data.FarmTimeZone
 import com.fildy.data.model.CattleCategory
 import com.fildy.ui.components.DataCard
 import com.fildy.ui.components.RainChart
@@ -49,7 +50,6 @@ import com.fildy.ui.theme.Tinta
 import com.fildy.ui.theme.forestBackground
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -254,9 +254,9 @@ private fun DashedDivider(modifier: Modifier = Modifier) {
     }
 }
 
-/** "19:48" in the device's time zone. */
+/** "19:48" in the farm's time zone (Buenos Aires). */
 private fun Instant.timeLabel(): String =
-    DateTimeFormatter.ofPattern("HH:mm").format(atZone(ZoneId.systemDefault()))
+    DateTimeFormatter.ofPattern("HH:mm").format(atZone(FarmTimeZone))
 
 /** "vaca" / "vacas"… (the noun alone, after a big number). */
 private val CattleCategory.nounPluralRes: Int

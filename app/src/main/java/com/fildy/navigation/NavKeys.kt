@@ -7,6 +7,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object Home : NavKey
 
-/** Voice mode: listening to / recording the user. */
 @Serializable
-data object Voice : NavKey
+data class Voice(val startRecording: Boolean = false) : NavKey
