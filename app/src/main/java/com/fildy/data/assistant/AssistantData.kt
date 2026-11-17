@@ -72,18 +72,22 @@ data class ToolOutput(val forModel: String, val data: AssistantData? = null)
 data class AssistantAnswer(val text: String, val data: List<AssistantData> = emptyList())
 
 /**
- * Collects the data of the tools called while answering, keeping only the last successful result
- * per tool: if the model retries a tool (e.g. corrects a date), the earlier result is dropped.
- * Results are ordered by when they were last produced.
+ * Collects the data of the tools called while answering, to show as cards.
+ *
+ * A tool that succeeded more than once in the same answer gets no card: one card can't stand for
+ * several results (e.g. the model looping over every paddock to total the farm would otherwise
+ * show only the last paddock, which contradicts the answer). Failed calls don't count, so an
+ * error followed by a corrected call still gets its card. Cards are in the order tools were first
+ * called.
  */
 class ToolResults {
-    private val byTool = LinkedHashMap<String, AssistantData>()
+    private val byTool = LinkedHashMap<String, MutableList<AssistantData>>()
 
     fun record(toolName: String, data: AssistantData?) {
-        if (data == null) return // failed calls don't replace a previous good result
-        byTool.remove(toolName) // re-insert so the order reflects the latest call
-        byTool[toolName] = data
+        if (data == null) return // failed calls don't produce or block a card
+        byTool.getOrPut(toolName) { mutableListOf() } += data
     }
 
-    fun all(): List<AssistantData> = byTool.values.toList()
+    /** One entry per tool that succeeded exactly once. */
+    fun all(): List<AssistantData> = byTool.values.mapNotNull { it.singleOrNull() }
 }
